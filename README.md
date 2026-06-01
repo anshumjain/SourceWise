@@ -129,8 +129,8 @@ Votes use a browser `localStorage` voter ID plus server uniqueness on `(articleI
 ## Deploy (Vercel + Postgres)
 
 1. Create a free [Neon](https://neon.tech) or Supabase Postgres database
-2. In Vercel → **Settings → Environment Variables**, add:
-   - `DATABASE_URL` — Postgres connection string (required for build + runtime)
+2. In Vercel → **Settings → Environment Variables**, add (enable for **Production** at minimum):
+   - `DATABASE_URL` — Postgres connection string (migrations run on deploy when this is set)
    - `CRON_SECRET` — random secret for `/api/cron/daily-edition`
    - `NEXT_PUBLIC_SITE_URL` — e.g. `https://your-app.vercel.app`
    - `USE_MOCK_NEWS` — `false` for live RSS
