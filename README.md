@@ -126,6 +126,16 @@ Respect robots.txt and publisher terms. Always link to originals.
 
 Votes use a browser `localStorage` voter ID plus server uniqueness on `(articleId, voterId, editionDate)`. Shared devices, cleared storage, or incognito can bypass or block votes. Documented on `/privacy`.
 
+## Vercel shows `404 NOT_FOUND` (plain page, `cle1::…` id)
+
+That is **Vercel**, not your app — usually **no successful Production deploy** exists at that URL.
+
+1. Open **Deployments** → latest **Production** must be **Ready** (green). If **Error**, open the build log.
+2. Open the URL from that deployment row (e.g. `source-wise-xxxx.vercel.app`), not a guessed name like `sourcewise.vercel.app`.
+3. **Settings → General → Root Directory** must be empty (repo root, where `package.json` lives).
+4. After Neon: ensure `DATABASE_URL` + `DATABASE_URL_UNPOOLED` exist, then **Redeploy**.
+5. Smoke test: `https://YOUR-DEPLOYMENT.vercel.app/api/health` → `{"ok":true}`.
+
 ## Deploy (Vercel + Postgres)
 
 1. Create a free [Neon](https://neon.tech) or Supabase Postgres database
