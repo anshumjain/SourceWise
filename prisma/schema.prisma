@@ -1,0 +1,51 @@
+generator client {
+  provider = "prisma-client-js"
+  engineType = "binary"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Edition {
+  id        String    @id @default(cuid())
+  date      String    @unique
+  createdAt DateTime  @default(now())
+  articles  Article[]
+}
+
+model Article {
+  id          String   @id @default(cuid())
+  editionId   String
+  edition     Edition  @relation(fields: [editionId], references: [id], onDelete: Cascade)
+  category    String
+  headline    String
+  summary     String
+  sourceUrl   String
+  sourceName  String
+  publishedAt DateTime
+  videoUrl    String?
+  imageUrl    String?
+  goodVotes   Int      @default(0)
+  badVotes    Int      @default(0)
+  createdAt   DateTime @default(now())
+  votes       Vote[]
+
+  @@index([editionId, category])
+}
+
+model Vote {
+  id          String   @id @default(cuid())
+  articleId   String
+  article     Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  voterId     String
+  voterIpHash String?
+  voteType    String
+  editionDate String
+  createdAt   DateTime @default(now())
+
+  @@unique([articleId, voterId, editionDate])
+  @@index([articleId])
+  @@index([editionDate, voterIpHash])
+}
