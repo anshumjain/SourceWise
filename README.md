@@ -9,19 +9,19 @@ Daily India news — mobile-first, facts only, one IST edition per day.
 ```bash
 npm install
 cp .env.example .env
-npm run db:push
+npm run db:migrate
 npm run fetch:daily-edition
 npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
 
-With `USE_MOCK_NEWS=true` (default in `.env.example`), the daily fetch seeds **90 neutral mock articles** (50 politics, 20 sports, 20 science & tech) without API keys.
+Set `USE_MOCK_NEWS=true` in `.env` to seed **90 mock articles** without RSS/API keys.
 
 ## Architecture
 
 - **Next.js App Router** + TypeScript + Tailwind CSS
-- **Prisma** + SQLite (local) / PostgreSQL (production)
+- **Prisma** + PostgreSQL (Neon/Supabase; required on Vercel)
 - **Daily cron** publishes one edition per IST calendar day
 - **RSS ingestion** from reputable Indian sources; optional NewsAPI fallback
 - **Votes** stored in DB; one vote per article per voter ID per edition day
@@ -128,11 +128,17 @@ Votes use a browser `localStorage` voter ID plus server uniqueness on `(articleI
 
 ## Deploy (Vercel + Postgres)
 
-1. Create a Neon/Supabase Postgres database
-2. Set `DATABASE_URL`, `CRON_SECRET`, `NEXT_PUBLIC_SITE_URL`
-3. Set `USE_MOCK_NEWS=false` for live RSS
-4. Deploy; run `npx prisma migrate deploy`
-5. Trigger first edition via cron endpoint or `npm run fetch:daily-edition`
+1. Create a free [Neon](https://neon.tech) or Supabase Postgres database
+2. In Vercel → **Settings → Environment Variables**, add:
+   - `DATABASE_URL` — Postgres connection string (required for build + runtime)
+   - `CRON_SECRET` — random secret for `/api/cron/daily-edition`
+   - `NEXT_PUBLIC_SITE_URL` — e.g. `https://your-app.vercel.app`
+   - `USE_MOCK_NEWS` — `false` for live RSS
+3. Redeploy (build runs `prisma migrate deploy` automatically)
+4. After deploy, trigger the first edition:
+   ```bash
+   curl -H "Authorization: Bearer YOUR_CRON_SECRET" https://your-app.vercel.app/api/cron/daily-edition
+   ```
 
 ## Out of scope v1
 

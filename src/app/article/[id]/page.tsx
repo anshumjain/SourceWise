@@ -7,6 +7,8 @@ import { buildEditionResponse } from "@/lib/edition-response";
 import { formatEditionDate } from "@/lib/ist";
 import { CATEGORY_LABELS, prismaCategoryToSlug } from "@/lib/types";
 
+export const dynamic = "force-dynamic";
+
 interface ArticlePageProps {
   params: Promise<{ id: string }>;
 }

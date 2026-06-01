@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getEditionSentiment } from "@/lib/sentiment";
 import { getIstDateString } from "@/lib/ist";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: NextRequest) {
   const date = request.nextUrl.searchParams.get("date") ?? getIstDateString();
   const sentiment = await getEditionSentiment(date);

@@ -10,7 +10,7 @@ import {
 import { formatEditionDate } from "@/lib/ist";
 import type { CategorySlug } from "@/lib/types";
 
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
 
 interface HomeProps {
   searchParams: Promise<{ category?: string }>;
