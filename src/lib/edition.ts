@@ -1,6 +1,7 @@
 import { prisma } from "./db";
 import { fetchAllDailyNews } from "./fetch-news";
 import type { NewsLanguage } from "./language";
+import { textMatchesLanguage } from "./language-detect";
 import { getIstDateString } from "./ist";
 import { slugToPrismaCategory } from "./types";
 
@@ -75,6 +76,9 @@ export async function getTopStories(
   });
 
   return articles
+    .filter((article) =>
+      textMatchesLanguage(article.headline, article.summary, language),
+    )
     .map((article) => ({
       ...article,
       totalVotes: article.goodVotes + article.badVotes,

@@ -1,5 +1,6 @@
 import Parser from "rss-parser";
 import type { NewsLanguage } from "./language";
+import { textMatchesLanguage } from "./language-detect";
 import type { RawNewsItem, CategorySlug } from "./types";
 import { itemBelongsInCategory } from "./category-classifier";
 import { dedupeNewsItems, trimSummary } from "./news-utils";
@@ -117,8 +118,8 @@ export const RSS_SOURCES_HI: FeedSource[] = [
     category: "politics",
   },
   {
-    name: "India Today",
-    url: "https://www.indiatoday.in/rss/home",
+    name: "BBC Hindi India",
+    url: "https://feeds.bbci.co.uk/hindi/india/rss.xml",
     category: "politics",
   },
   {
@@ -202,7 +203,10 @@ async function fetchFeed(
           imageUrl: extractImageUrl(item),
         } satisfies RawNewsItem;
       })
-      .filter((item) => itemBelongsInCategory(item, source.category));
+      .filter((item) => itemBelongsInCategory(item, source.category))
+      .filter((item) =>
+        textMatchesLanguage(item.headline, item.summary, language),
+      );
   } catch (error) {
     console.error(`Failed to fetch ${source.name}:`, error);
     return [];
@@ -257,7 +261,10 @@ async function fetchNewsApi(
           : new Date(),
         imageUrl: article.urlToImage,
       }))
-      .filter((item) => itemBelongsInCategory(item, category));
+      .filter((item) => itemBelongsInCategory(item, category))
+      .filter((item) =>
+        textMatchesLanguage(item.headline, item.summary, language),
+      );
   } catch (error) {
     console.error("NewsAPI fetch failed:", error);
     return [];
@@ -276,6 +283,9 @@ function selectByQuota(
   >) {
     const categoryItems = deduped
       .filter((item) => item.category === category)
+      .filter((item) =>
+        textMatchesLanguage(item.headline, item.summary, language),
+      )
       .sort((a, b) => b.publishedAt.getTime() - a.publishedAt.getTime())
       .slice(0, quota);
 

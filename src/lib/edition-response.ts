@@ -1,4 +1,5 @@
 import type { NewsLanguage } from "./language";
+import { textMatchesLanguage } from "./language-detect";
 import { sanitizeSummary } from "./news-utils";
 import {
   getCategoryLabel,
@@ -15,7 +16,13 @@ export function buildEditionResponse(
   return {
     date: edition.date,
     formattedDate: "",
-    articles: edition.articles.map((article) => {
+    articles: edition.articles
+      .filter(
+        (article) =>
+          article.language === language &&
+          textMatchesLanguage(article.headline, article.summary, language),
+      )
+      .map((article) => {
       const totalVotes = article.goodVotes + article.badVotes;
       const goodPercent =
         totalVotes === 0
