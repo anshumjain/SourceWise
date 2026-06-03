@@ -1,7 +1,6 @@
-import { ArticleFeed } from "@/components/ArticleFeed";
 import { CategoryTabs } from "@/components/CategoryTabs";
+import { EditionFeed } from "@/components/EditionFeed";
 import { EditionHero } from "@/components/EditionHero";
-import { TopStories } from "@/components/TopStories";
 import { getCurrentEdition, getTopStories } from "@/lib/edition";
 import {
   buildEditionResponse,
@@ -111,25 +110,15 @@ export default async function Home({ searchParams }: HomeProps) {
       </div>
 
       <div className="mx-auto max-w-6xl space-y-8 px-4 py-8 sm:px-6">
-        {activeCategory === "all" && topArticles.length > 0 && (
-          <TopStories articles={topArticles} language={language} />
-        )}
-
-        {articles.length === 0 ? (
-          <p className="rounded-2xl border border-dashed border-stone-300 bg-white p-10 text-center text-stone-600 dark:border-stone-800 dark:bg-stone-950/60 dark:text-stone-300">
-            {language === "hi"
-              ? "आज के संस्करण में इस श्रेणी में कोई लेख नहीं है।"
-              : "No articles in this category for today's edition."}
-          </p>
-        ) : (
-          <ArticleFeed
-            articles={articles}
-            editionDate={edition.date}
-            siteUrl={siteUrl}
-            activeCategory={activeCategory}
-            language={language}
-          />
-        )}
+        <EditionFeed
+          articles={articles}
+          topArticles={topArticles}
+          editionDate={edition.date}
+          siteUrl={siteUrl}
+          activeCategory={activeCategory}
+          language={language}
+          showTopStories={activeCategory === "all"}
+        />
       </div>
     </>
   );

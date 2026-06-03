@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { ArticleCard } from "@/components/ArticleCard";
+import { useArticleReader } from "@/components/ArticleReaderProvider";
 import { useFeedView, ViewToggle } from "@/components/ViewToggle";
 import type { NewsLanguage } from "@/lib/language";
 import { getUiCopy } from "@/lib/ui-copy";
@@ -36,6 +37,7 @@ export function ArticleFeed({
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [view, setView] = useFeedView();
   const copy = getUiCopy(language);
+  const { openArticle } = useArticleReader();
 
   const feedItems = useMemo(() => {
     if (activeCategory !== "all") {
@@ -103,6 +105,7 @@ export function ArticleFeed({
               siteUrl={siteUrl}
               layout={view}
               language={language}
+              onOpenArticle={openArticle}
             />
           );
         })}

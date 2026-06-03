@@ -1,6 +1,7 @@
 import Parser from "rss-parser";
 import type { NewsLanguage } from "./language";
 import type { RawNewsItem, CategorySlug } from "./types";
+import { itemBelongsInCategory } from "./category-classifier";
 import { dedupeNewsItems, trimSummary } from "./news-utils";
 import { generateMockNews } from "./mock-news";
 import { CATEGORY_QUOTAS } from "./types";
@@ -111,34 +112,24 @@ export const RSS_SOURCES_HI: FeedSource[] = [
     category: "politics",
   },
   {
-    name: "NDTV India Hindi",
-    url: "https://feeds.feedburner.com/ndtvnews-hindi-news",
+    name: "Aaj Tak",
+    url: "https://www.aajtak.in/rssfeeds/?id=home",
     category: "politics",
   },
   {
-    name: "Jagran National",
-    url: "https://www.jagran.com/rss/news/national.xml",
+    name: "India Today",
+    url: "https://www.indiatoday.in/rss/home",
     category: "politics",
   },
   {
-    name: "Live Hindustan",
-    url: "https://www.livehindustan.com/rss/news",
+    name: "Amar Ujala National",
+    url: "https://www.amarujala.com/rss/india-news.xml",
     category: "politics",
   },
   {
-    name: "ABP News",
-    url: "https://www.abplive.com/feed",
+    name: "Amar Ujala India",
+    url: "https://www.amarujala.com/rss/national.xml",
     category: "politics",
-  },
-  {
-    name: "Jagran Sports",
-    url: "https://www.jagran.com/rss/sports.xml",
-    category: "sports",
-  },
-  {
-    name: "Navbharat Times Sports",
-    url: "https://navbharattimes.indiatimes.com/rssfeeds/4719148.cms",
-    category: "sports",
   },
   {
     name: "BBC Hindi Sport",
@@ -146,18 +137,28 @@ export const RSS_SOURCES_HI: FeedSource[] = [
     category: "sports",
   },
   {
-    name: "Jagran Technology",
-    url: "https://www.jagran.com/rss/technology.xml",
+    name: "Amar Ujala Sports",
+    url: "https://www.amarujala.com/rss/sports.xml",
+    category: "sports",
+  },
+  {
+    name: "ABP Sports",
+    url: "https://www.abplive.com/sports/feed",
+    category: "sports",
+  },
+  {
+    name: "Amar Ujala Tech",
+    url: "https://www.amarujala.com/rss/technology.xml",
     category: "science-tech",
   },
   {
-    name: "NDTV Gadgets Hindi",
-    url: "https://feeds.feedburner.com/ndtvnews-gadgets-hindi",
+    name: "ABP Tech",
+    url: "https://www.abplive.com/technology/feed",
     category: "science-tech",
   },
   {
-    name: "Live Hindustan Tech",
-    url: "https://www.livehindustan.com/rss/technology",
+    name: "Jagran Tech Hindi",
+    url: "https://tools.jagran.com/rss/jagranhindi/jagrantechhindinews.xml",
     category: "science-tech",
   },
 ];
@@ -175,27 +176,29 @@ async function fetchFeed(
 ): Promise<RawNewsItem[]> {
   try {
     const feed = await parser.parseURL(source.url);
-    return (feed.items ?? []).map((item) => {
-      const content = item.contentSnippet || item.content || item.summary || "";
-      const publishedAt = item.isoDate ? new Date(item.isoDate) : new Date();
-      const enclosure = item.enclosure?.url;
-      const videoUrl =
-        enclosure && /\.(mp4|webm)|youtube|youtu\.be/i.test(enclosure)
-          ? enclosure
-          : undefined;
+    return (feed.items ?? [])
+      .map((item) => {
+        const content = item.contentSnippet || item.content || item.summary || "";
+        const publishedAt = item.isoDate ? new Date(item.isoDate) : new Date();
+        const enclosure = item.enclosure?.url;
+        const videoUrl =
+          enclosure && /\.(mp4|webm)|youtube|youtu\.be/i.test(enclosure)
+            ? enclosure
+            : undefined;
 
-      return {
-        language,
-        category: source.category,
-        headline: (item.title ?? "Untitled").trim(),
-        summary: trimSummary(content || item.title || ""),
-        sourceUrl: item.link ?? source.url,
-        sourceName: source.name,
-        publishedAt,
-        videoUrl,
-        imageUrl: extractImageUrl(item),
-      } satisfies RawNewsItem;
-    });
+        return {
+          language,
+          category: source.category,
+          headline: (item.title ?? "Untitled").trim(),
+          summary: trimSummary(content || item.title || ""),
+          sourceUrl: item.link ?? source.url,
+          sourceName: source.name,
+          publishedAt,
+          videoUrl,
+          imageUrl: extractImageUrl(item),
+        } satisfies RawNewsItem;
+      })
+      .filter((item) => itemBelongsInCategory(item, source.category));
   } catch (error) {
     console.error(`Failed to fetch ${source.name}:`, error);
     return [];
@@ -237,18 +240,20 @@ async function fetchNewsApi(
       }>;
     };
 
-    return (data.articles ?? []).map((article) => ({
-      language: "en" as const,
-      category,
-      headline: (article.title ?? "Untitled").trim(),
-      summary: trimSummary(article.description || article.title || ""),
-      sourceUrl: article.url ?? "https://newsapi.org",
-      sourceName: article.source?.name ?? "NewsAPI",
-      publishedAt: article.publishedAt
-        ? new Date(article.publishedAt)
-        : new Date(),
-      imageUrl: article.urlToImage,
-    }));
+    return (data.articles ?? [])
+      .map((article) => ({
+        language: "en" as const,
+        category,
+        headline: (article.title ?? "Untitled").trim(),
+        summary: trimSummary(article.description || article.title || ""),
+        sourceUrl: article.url ?? "https://newsapi.org",
+        sourceName: article.source?.name ?? "NewsAPI",
+        publishedAt: article.publishedAt
+          ? new Date(article.publishedAt)
+          : new Date(),
+        imageUrl: article.urlToImage,
+      }))
+      .filter((item) => itemBelongsInCategory(item, category));
   } catch (error) {
     console.error("NewsAPI fetch failed:", error);
     return [];

@@ -1,3 +1,7 @@
+import {
+  itemBelongsInCategory,
+  pickBetterCategoryItem,
+} from "./category-classifier";
 import type { RawNewsItem } from "./types";
 
 const OPINION_KEYWORDS = [
@@ -101,26 +105,32 @@ function titleSimilarity(a: string, b: string): number {
 }
 
 export function dedupeNewsItems(items: RawNewsItem[]): RawNewsItem[] {
-  const seenUrls = new Set<string>();
-  const seenTitleKeys = new Set<string>();
-  const result: RawNewsItem[] = [];
+  const byUrl = new Map<string, RawNewsItem>();
 
   for (const item of items) {
     if (isLikelyOpinionPiece(item)) continue;
+    if (!itemBelongsInCategory(item, item.category)) continue;
 
     const normalized = normalizeUrl(item.sourceUrl);
-    if (seenUrls.has(normalized)) continue;
+    const existing = byUrl.get(normalized);
+    if (existing) {
+      byUrl.set(normalized, pickBetterCategoryItem(existing, item));
+      continue;
+    }
+    byUrl.set(normalized, item);
+  }
 
-    const titleKey = normalizeTitle(item.headline).slice(0, 12).join("-");
-    if (titleKey.length > 0 && seenTitleKeys.has(titleKey)) continue;
+  const result: RawNewsItem[] = [];
 
-    const duplicate = result.find(
-      (existing) => titleSimilarity(existing.headline, item.headline) > 0.72
+  for (const item of byUrl.values()) {
+    const similar = result.find(
+      (existing) => titleSimilarity(existing.headline, item.headline) > 0.72,
     );
-    if (duplicate) continue;
-
-    seenUrls.add(normalized);
-    if (titleKey.length > 0) seenTitleKeys.add(titleKey);
+    if (similar) {
+      const index = result.indexOf(similar);
+      result[index] = pickBetterCategoryItem(similar, item);
+      continue;
+    }
     result.push(item);
   }
 

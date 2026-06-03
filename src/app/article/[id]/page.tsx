@@ -6,7 +6,6 @@ import { getArticleById } from "@/lib/edition";
 import { buildEditionResponse } from "@/lib/edition-response";
 import { formatEditionDate } from "@/lib/ist";
 import { buildHomeHref, parseLanguage } from "@/lib/language";
-import { getUiCopy } from "@/lib/ui-copy";
 import {
   getCategoryLabel,
   prismaCategoryToSlug,

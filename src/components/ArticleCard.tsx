@@ -16,6 +16,7 @@ interface ArticleCardProps {
   expanded?: boolean;
   layout?: FeedView;
   language?: NewsLanguage;
+  onOpenArticle?: (article: Article) => void;
 }
 
 function ArticleImage({
@@ -64,6 +65,7 @@ export function ArticleCard({
   expanded = false,
   layout = "grid",
   language = "en",
+  onOpenArticle,
 }: ArticleCardProps) {
   const ui = getUiCopy(language);
   const shareUrl = `${siteUrl}/article/${article.id}`;
@@ -72,12 +74,45 @@ export function ArticleCard({
       ? `${article.summary.slice(0, 180).trim()}…`
       : article.summary;
 
+  const openReader = () => onOpenArticle?.(article);
+
+  const headlineContent = expanded ? (
+    article.headline
+  ) : onOpenArticle ? (
+    <button
+      type="button"
+      onClick={openReader}
+      className="text-left transition hover:text-emerald-800 dark:hover:text-emerald-300"
+    >
+      {article.headline}
+    </button>
+  ) : (
+    <Link
+      href={`/article/${article.id}`}
+      className="transition hover:text-emerald-800 dark:hover:text-emerald-300"
+    >
+      {article.headline}
+    </Link>
+  );
+
+  const imageTrigger = onOpenArticle ? (
+    <button
+      type="button"
+      onClick={openReader}
+      className="block w-full text-left"
+    >
+      <ArticleImage imageUrl={article.imageUrl} layout={layout} />
+    </button>
+  ) : (
+    <Link href={`/article/${article.id}`} className="block">
+      <ArticleImage imageUrl={article.imageUrl} layout={layout} />
+    </Link>
+  );
+
   return (
     <article className="group overflow-hidden rounded-2xl border border-stone-200/80 bg-white shadow-sm shadow-stone-200/50 transition hover:border-stone-300 hover:shadow-md hover:shadow-stone-200/60 dark:border-stone-800 dark:bg-stone-950/60 dark:shadow-none dark:hover:border-stone-700">
       <div className={layout === "list" ? "flex flex-col sm:flex-row" : "flex flex-col"}>
-        <Link href={`/article/${article.id}`} className="block">
-          <ArticleImage imageUrl={article.imageUrl} layout={layout} />
-        </Link>
+        {imageTrigger}
 
         <div className="flex flex-1 flex-col p-5">
           <div className="mb-3 flex items-center justify-between gap-3">
@@ -111,16 +146,7 @@ export function ArticleCard({
           </div>
 
           <h2 className="font-serif text-lg font-semibold leading-snug text-stone-900 dark:text-stone-50">
-            {expanded ? (
-              article.headline
-            ) : (
-              <Link
-                href={`/article/${article.id}`}
-                className="transition hover:text-emerald-800 dark:hover:text-emerald-300"
-              >
-                {article.headline}
-              </Link>
-            )}
+            {headlineContent}
           </h2>
 
           <p className="mt-3 text-sm leading-relaxed text-stone-600 dark:text-stone-300">

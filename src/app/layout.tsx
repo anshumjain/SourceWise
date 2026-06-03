@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Source_Serif_4, Inter } from "next/font/google";
 import { Header } from "@/components/Header";
 import { SiteFooter } from "@/components/SiteFooter";
@@ -56,7 +57,9 @@ export default function RootLayout({
         <ToastProvider>
           <Header />
           <main className="flex-1">{children}</main>
-          <SiteFooter />
+          <Suspense fallback={null}>
+            <SiteFooter />
+          </Suspense>
         </ToastProvider>
       </body>
     </html>

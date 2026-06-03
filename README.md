@@ -34,7 +34,7 @@ See `.env.example`:
 
 | Variable | Purpose |
 |----------|---------|
-| `DATABASE_URL` | SQLite `file:./dev.db` locally; Postgres URL in production |
+| `DATABASE_URL` | PostgreSQL URL (Neon) — same locally and on Vercel |
 | `USE_MOCK_NEWS` | `true` = mock 90-article edition (no network) |
 | `NEWS_API_KEY` | Optional NewsAPI.org fallback |
 | `OPENAI_API_KEY` | Reserved for future neutral summarization |

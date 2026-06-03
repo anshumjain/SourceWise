@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "node scripts/check-database-env.mjs && next dev",
     "build": "prisma generate && node scripts/vercel-build.mjs && next build",
     "db:deploy": "prisma migrate deploy",
     "start": "next start",

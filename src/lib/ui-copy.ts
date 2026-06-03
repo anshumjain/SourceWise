@@ -20,6 +20,30 @@ export interface UiCopy {
     shareWhatsApp: string;
     sentimentBar: (goodPercent: number, badPercent: number) => string;
     loadMoreStories: string;
+    closeArticle: string;
+    articleReader: string;
+  };
+  hero: {
+    editionBadge: string;
+    tagline: string;
+    storiesToday: (count: number) => string;
+    priorEditionsNote: string;
+  };
+  footer: {
+    tagline: string;
+    schedule: string;
+  };
+  topStories: {
+    eyebrow: string;
+    title: string;
+    votes: (count: number) => string;
+    goodForCountry: (percent: number) => string;
+  };
+  reader: {
+    loading: string;
+    loadFailed: string;
+    closeHint: string;
+    cachedNote: string;
   };
   theme: { light: string; dark: string; system: string };
   view: { grid: string; list: string };
@@ -45,6 +69,32 @@ const EN: UiCopy = {
     sentimentBar: (good, bad) =>
       `Sentiment bar: ${good}% good, ${bad}% bad`,
     loadMoreStories: "Load more stories",
+    closeArticle: "Close article",
+    articleReader: "Article reader",
+  },
+  hero: {
+    editionBadge: "Today's edition · refreshed 9:00 AM IST",
+    tagline:
+      "Facts only — who, what, when, where. You judge what it means for India through your vote on every story.",
+    storiesToday: (count) => `${count} stories today`,
+    priorEditionsNote: "Prior editions are replaced each morning",
+  },
+  footer: {
+    tagline:
+      "Factual reporting only. Community votes reflect reader sentiment, not editorial endorsement.",
+    schedule: "One edition per day · 9:00 AM IST",
+  },
+  topStories: {
+    eyebrow: "Most rated today",
+    title: "Top stories by reader votes",
+    votes: (count) => `${count} votes`,
+    goodForCountry: (percent) => `${percent}% rated good for the country`,
+  },
+  reader: {
+    loading: "Loading full article…",
+    loadFailed: "Could not load the full article. Read at the original source.",
+    closeHint: "Tap outside or press Esc to return to the feed",
+    cachedNote: "Cached on this device for faster reading",
   },
   theme: { light: "Light", dark: "Dark", system: "System" },
   view: { grid: "Grid", list: "List" },
@@ -71,6 +121,33 @@ const HI: UiCopy = {
     sentimentBar: (good, bad) =>
       `भावना पट्टी: ${good}% अच्छा, ${bad}% बुरा`,
     loadMoreStories: "और खबरें देखें",
+    closeArticle: "लेख बंद करें",
+    articleReader: "लेख पाठक",
+  },
+  hero: {
+    editionBadge: "आज का संस्करण · सुबह 9:00 बजे IST पर नवीनीकरण",
+    tagline:
+      "केवल तथ्य — कौन, क्या, कब, कहाँ। हर खबर पर अपने वोट से आप अपनी राय दें।",
+    storiesToday: (count) => `${count} खबरें आज`,
+    priorEditionsNote: "पिछले संस्करण हर सुबह बदले जाते हैं",
+  },
+  footer: {
+    tagline:
+      "केवल तथ्यपूर्ण रिपोर्टिंग। पाठक वोट संपादकीय समर्थन नहीं, बल्कि पाठक भावना दर्शाते हैं।",
+    schedule: "प्रतिदिन एक संस्करण · सुबह 9:00 बजे IST",
+  },
+  topStories: {
+    eyebrow: "आज सबसे अधिक रेटिंग",
+    title: "पाठकों के वोट पर शीर्ष खबरें",
+    votes: (count) => `${count} वोट`,
+    goodForCountry: (percent) => `${percent}% ने देश के लिए अच्छा माना`,
+  },
+  reader: {
+    loading: "पूरा लेख लोड हो रहा है…",
+    loadFailed:
+      "पूरा लेख लोड नहीं हो सका। मूल स्रोत पर पढ़ें।",
+    closeHint: "फ़ीड पर लौटने के लिए बाहर टैप करें या Esc दबाएँ",
+    cachedNote: "तेज़ पढ़ने के लिए इस डिवाइस पर सहेजा गया",
   },
   theme: { light: "लाइट", dark: "डार्क", system: "सिस्टम" },
   view: { grid: "ग्रिड", list: "सूची" },
