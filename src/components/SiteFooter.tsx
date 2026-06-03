@@ -13,7 +13,7 @@ export function SiteFooter() {
             </p>
           </div>
           <div className="text-sm text-stone-500 dark:text-stone-400">
-            <p>One edition per day · Midnight IST</p>
+            <p>One edition per day · 9:00 AM IST</p>
             <p className="mt-1">© {new Date().getFullYear()} Sourcewise</p>
           </div>
         </div>

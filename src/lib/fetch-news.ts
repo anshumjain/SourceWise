@@ -1,4 +1,5 @@
 import Parser from "rss-parser";
+import type { NewsLanguage } from "./language";
 import type { RawNewsItem, CategorySlug } from "./types";
 import { dedupeNewsItems, trimSummary } from "./news-utils";
 import { generateMockNews } from "./mock-news";
@@ -45,7 +46,7 @@ interface FeedSource {
   category: CategorySlug;
 }
 
-export const RSS_SOURCES: FeedSource[] = [
+export const RSS_SOURCES_EN: FeedSource[] = [
   {
     name: "The Hindu National",
     url: "https://www.thehindu.com/news/national/?service=rss",
@@ -103,7 +104,75 @@ export const RSS_SOURCES: FeedSource[] = [
   },
 ];
 
-async function fetchFeed(source: FeedSource): Promise<RawNewsItem[]> {
+export const RSS_SOURCES_HI: FeedSource[] = [
+  {
+    name: "BBC Hindi",
+    url: "https://feeds.bbci.co.uk/hindi/rss.xml",
+    category: "politics",
+  },
+  {
+    name: "NDTV India Hindi",
+    url: "https://feeds.feedburner.com/ndtvnews-hindi-news",
+    category: "politics",
+  },
+  {
+    name: "Jagran National",
+    url: "https://www.jagran.com/rss/news/national.xml",
+    category: "politics",
+  },
+  {
+    name: "Live Hindustan",
+    url: "https://www.livehindustan.com/rss/news",
+    category: "politics",
+  },
+  {
+    name: "ABP News",
+    url: "https://www.abplive.com/feed",
+    category: "politics",
+  },
+  {
+    name: "Jagran Sports",
+    url: "https://www.jagran.com/rss/sports.xml",
+    category: "sports",
+  },
+  {
+    name: "Navbharat Times Sports",
+    url: "https://navbharattimes.indiatimes.com/rssfeeds/4719148.cms",
+    category: "sports",
+  },
+  {
+    name: "BBC Hindi Sport",
+    url: "https://feeds.bbci.co.uk/hindi/sport/rss.xml",
+    category: "sports",
+  },
+  {
+    name: "Jagran Technology",
+    url: "https://www.jagran.com/rss/technology.xml",
+    category: "science-tech",
+  },
+  {
+    name: "NDTV Gadgets Hindi",
+    url: "https://feeds.feedburner.com/ndtvnews-gadgets-hindi",
+    category: "science-tech",
+  },
+  {
+    name: "Live Hindustan Tech",
+    url: "https://www.livehindustan.com/rss/technology",
+    category: "science-tech",
+  },
+];
+
+/** @deprecated Use RSS_SOURCES_EN */
+export const RSS_SOURCES = RSS_SOURCES_EN;
+
+function sourcesForLanguage(language: NewsLanguage): FeedSource[] {
+  return language === "hi" ? RSS_SOURCES_HI : RSS_SOURCES_EN;
+}
+
+async function fetchFeed(
+  source: FeedSource,
+  language: NewsLanguage,
+): Promise<RawNewsItem[]> {
   try {
     const feed = await parser.parseURL(source.url);
     return (feed.items ?? []).map((item) => {
@@ -116,6 +185,7 @@ async function fetchFeed(source: FeedSource): Promise<RawNewsItem[]> {
           : undefined;
 
       return {
+        language,
         category: source.category,
         headline: (item.title ?? "Untitled").trim(),
         summary: trimSummary(content || item.title || ""),
@@ -132,7 +202,12 @@ async function fetchFeed(source: FeedSource): Promise<RawNewsItem[]> {
   }
 }
 
-async function fetchNewsApi(category: CategorySlug): Promise<RawNewsItem[]> {
+async function fetchNewsApi(
+  category: CategorySlug,
+  language: NewsLanguage,
+): Promise<RawNewsItem[]> {
+  if (language === "hi") return [];
+
   const apiKey = process.env.NEWS_API_KEY;
   if (!apiKey) return [];
 
@@ -163,6 +238,7 @@ async function fetchNewsApi(category: CategorySlug): Promise<RawNewsItem[]> {
     };
 
     return (data.articles ?? []).map((article) => ({
+      language: "en" as const,
       category,
       headline: (article.title ?? "Untitled").trim(),
       summary: trimSummary(article.description || article.title || ""),
@@ -179,7 +255,10 @@ async function fetchNewsApi(category: CategorySlug): Promise<RawNewsItem[]> {
   }
 }
 
-function selectByQuota(items: RawNewsItem[]): RawNewsItem[] {
+function selectByQuota(
+  items: RawNewsItem[],
+  language: NewsLanguage,
+): RawNewsItem[] {
   const deduped = dedupeNewsItems(items);
   const selected: RawNewsItem[] = [];
 
@@ -193,7 +272,7 @@ function selectByQuota(items: RawNewsItem[]): RawNewsItem[] {
 
     if (categoryItems.length < quota) {
       if (process.env.USE_MOCK_NEWS === "true") {
-        const mockFill = generateMockNews()
+        const mockFill = generateMockNews(language)
           .filter((item) => item.category === category)
           .slice(0, quota - categoryItems.length)
           .map((item, index) => ({
@@ -205,7 +284,7 @@ function selectByQuota(items: RawNewsItem[]): RawNewsItem[] {
       } else {
         selected.push(...categoryItems);
         console.warn(
-          `${category}: only ${categoryItems.length}/${quota} articles fetched from live sources`
+          `[${language}] ${category}: only ${categoryItems.length}/${quota} articles from live sources`,
         );
       }
     } else {
@@ -216,16 +295,33 @@ function selectByQuota(items: RawNewsItem[]): RawNewsItem[] {
   return selected;
 }
 
-export async function fetchDailyNews(): Promise<RawNewsItem[]> {
+/** Fetches up to 90 articles (50/20/20) for one language. */
+export async function fetchDailyNews(
+  language: NewsLanguage,
+): Promise<RawNewsItem[]> {
   if (process.env.USE_MOCK_NEWS === "true") {
-    return generateMockNews();
+    return generateMockNews(language);
   }
 
-  const feedResults = await Promise.all(RSS_SOURCES.map(fetchFeed));
+  const sources = sourcesForLanguage(language);
+  const feedResults = await Promise.all(
+    sources.map((source) => fetchFeed(source, language)),
+  );
   const apiResults = await Promise.all(
-    (["politics", "sports", "science-tech"] as CategorySlug[]).map(fetchNewsApi)
+    (["politics", "sports", "science-tech"] as CategorySlug[]).map((category) =>
+      fetchNewsApi(category, language),
+    ),
   );
 
   const combined = [...feedResults.flat(), ...apiResults.flat()];
-  return selectByQuota(combined);
+  return selectByQuota(combined, language);
+}
+
+/** English + Hindi editions combined (180 articles). */
+export async function fetchAllDailyNews(): Promise<RawNewsItem[]> {
+  const [en, hi] = await Promise.all([
+    fetchDailyNews("en"),
+    fetchDailyNews("hi"),
+  ]);
+  return [...en, ...hi];
 }

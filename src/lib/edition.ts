@@ -1,12 +1,13 @@
 import { prisma } from "./db";
-import { fetchDailyNews } from "./fetch-news";
+import { fetchAllDailyNews } from "./fetch-news";
+import type { NewsLanguage } from "./language";
 import { getIstDateString } from "./ist";
 import { slugToPrismaCategory } from "./types";
 
 /** Publishes today's edition at 9 AM IST. Wipes all prior editions, articles, and votes. */
 export async function publishDailyEdition(dateString?: string) {
   const date = dateString ?? getIstDateString();
-  const items = await fetchDailyNews();
+  const items = await fetchAllDailyNews();
 
   await prisma.vote.deleteMany({});
   await prisma.article.deleteMany({});
@@ -17,6 +18,7 @@ export async function publishDailyEdition(dateString?: string) {
       date,
       articles: {
         create: items.map((item) => ({
+          language: item.language,
           category: slugToPrismaCategory(item.category),
           headline: item.headline,
           summary: item.summary,
@@ -34,31 +36,42 @@ export async function publishDailyEdition(dateString?: string) {
   return edition;
 }
 
-export async function getCurrentEdition() {
-  return prisma.edition.findFirst({
+export async function getCurrentEdition(language?: NewsLanguage) {
+  const edition = await prisma.edition.findFirst({
     orderBy: { createdAt: "desc" },
     include: {
       articles: {
+        where: language ? { language } : undefined,
         orderBy: [{ category: "asc" }, { publishedAt: "desc" }],
       },
     },
   });
+
+  return edition;
 }
 
-export async function getEditionByDate(dateString: string) {
+export async function getEditionByDate(
+  dateString: string,
+  language?: NewsLanguage,
+) {
   return prisma.edition.findUnique({
     where: { date: dateString },
     include: {
       articles: {
+        where: language ? { language } : undefined,
         orderBy: [{ category: "asc" }, { publishedAt: "desc" }],
       },
     },
   });
 }
 
-export async function getTopStories(editionDate: string, limit = 3) {
+export async function getTopStories(
+  editionDate: string,
+  language: NewsLanguage,
+  limit = 3,
+) {
   const articles = await prisma.article.findMany({
-    where: { edition: { date: editionDate } },
+    where: { edition: { date: editionDate }, language },
   });
 
   return articles

@@ -1,3 +1,5 @@
+import type { NewsLanguage } from "./language";
+
 export type CategorySlug = "politics" | "sports" | "science-tech";
 
 export const CATEGORY_LABELS: Record<CategorySlug, string> = {
@@ -5,6 +7,19 @@ export const CATEGORY_LABELS: Record<CategorySlug, string> = {
   sports: "Sports",
   "science-tech": "Science & Technology",
 };
+
+export const CATEGORY_LABELS_HI: Record<CategorySlug, string> = {
+  politics: "राजनीति",
+  sports: "खेल",
+  "science-tech": "विज्ञान और तकनीक",
+};
+
+export function getCategoryLabel(
+  category: CategorySlug,
+  language: NewsLanguage,
+): string {
+  return language === "hi" ? CATEGORY_LABELS_HI[category] : CATEGORY_LABELS[category];
+}
 
 export const CATEGORY_QUOTAS: Record<CategorySlug, number> = {
   politics: 50,
@@ -70,6 +85,7 @@ export interface EditionResponse {
 }
 
 export interface RawNewsItem {
+  language: NewsLanguage;
   category: CategorySlug;
   headline: string;
   summary: string;

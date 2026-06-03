@@ -1,5 +1,6 @@
+import type { NewsLanguage } from "./language";
 import {
-  CATEGORY_LABELS,
+  getCategoryLabel,
   prismaCategoryToSlug,
   type CategorySlug,
   type EditionResponse,
@@ -7,7 +8,8 @@ import {
 import type { Article, Edition } from "@prisma/client";
 
 export function buildEditionResponse(
-  edition: Edition & { articles: Article[] }
+  edition: Edition & { articles: Article[] },
+  language: NewsLanguage = "en",
 ): EditionResponse {
   return {
     date: edition.date,
@@ -26,7 +28,7 @@ export function buildEditionResponse(
         headline: article.headline,
         summary: article.summary,
         category,
-        categoryLabel: CATEGORY_LABELS[category],
+        categoryLabel: getCategoryLabel(category, language),
         sourceUrl: article.sourceUrl,
         sourceName: article.sourceName,
         publishedAt: article.publishedAt.toISOString(),

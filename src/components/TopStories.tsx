@@ -1,21 +1,25 @@
 import Link from "next/link";
+import type { NewsLanguage } from "@/lib/language";
 import type { EditionResponse } from "@/lib/types";
 
 interface TopStoriesProps {
   articles: EditionResponse["articles"];
+  language?: NewsLanguage;
 }
 
-export function TopStories({ articles }: TopStoriesProps) {
+export function TopStories({ articles, language = "en" }: TopStoriesProps) {
   if (articles.length === 0) return null;
 
   return (
     <section className="mb-8">
       <div className="mb-4">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700 dark:text-emerald-400">
-          Most rated today
+          {language === "hi" ? "आज सबसे अधिक रेटिंग" : "Most rated today"}
         </p>
         <h2 className="font-serif text-2xl font-semibold text-stone-900 dark:text-stone-50">
-          Top stories by reader votes
+          {language === "hi"
+            ? "पाठकों के वोट पर शीर्ष खबरें"
+            : "Top stories by reader votes"}
         </h2>
       </div>
       <ol className="grid gap-3 md:grid-cols-3">

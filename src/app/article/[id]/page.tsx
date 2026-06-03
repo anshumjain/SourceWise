@@ -5,7 +5,8 @@ import { ArticleCard } from "@/components/ArticleCard";
 import { getArticleById } from "@/lib/edition";
 import { buildEditionResponse } from "@/lib/edition-response";
 import { formatEditionDate } from "@/lib/ist";
-import { CATEGORY_LABELS, prismaCategoryToSlug } from "@/lib/types";
+import { buildHomeHref, parseLanguage } from "@/lib/language";
+import { getCategoryLabel, prismaCategoryToSlug } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -51,10 +52,14 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     notFound();
   }
 
-  const editionData = buildEditionResponse({
-    ...articleRecord.edition,
-    articles: [articleRecord],
-  });
+  const articleLang = parseLanguage(articleRecord.language);
+  const editionData = buildEditionResponse(
+    {
+      ...articleRecord.edition,
+      articles: [articleRecord],
+    },
+    articleLang,
+  );
   const article = editionData.articles[0];
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
   const category = prismaCategoryToSlug(articleRecord.category);
@@ -62,13 +67,14 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   return (
     <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
       <Link
-        href="/"
+        href={buildHomeHref({ lang: articleLang })}
         className="inline-flex items-center gap-2 text-sm text-stone-500 transition hover:text-stone-800 dark:text-stone-400 dark:hover:text-stone-200"
       >
-        ← Back to edition
+        ← {articleLang === "hi" ? "संस्करण पर वापस" : "Back to edition"}
       </Link>
       <p className="mt-6 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700 dark:text-emerald-400">
-        {CATEGORY_LABELS[category]} · {formatEditionDate(articleRecord.edition.date)}, IST
+        {getCategoryLabel(category, articleLang)} ·{" "}
+        {formatEditionDate(articleRecord.edition.date)}, IST
       </p>
       <div className="mt-4">
         <ArticleCard

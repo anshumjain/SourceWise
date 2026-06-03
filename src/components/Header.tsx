@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { Suspense } from "react";
+import { LanguageToggle } from "@/components/LanguageToggle";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 export function Header() {
@@ -19,6 +21,13 @@ export function Header() {
           </div>
         </Link>
         <nav className="flex items-center gap-2 text-sm">
+          <Suspense
+            fallback={
+              <div className="h-8 w-[7.5rem] rounded-full bg-stone-100 dark:bg-stone-900/60" />
+            }
+          >
+            <LanguageToggle />
+          </Suspense>
           <ThemeToggle />
           <Link
             href="/about"

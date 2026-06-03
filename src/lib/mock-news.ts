@@ -1,3 +1,4 @@
+import type { NewsLanguage } from "./language";
 import { trimSummary } from "./news-utils";
 import type { RawNewsItem } from "./types";
 
@@ -52,10 +53,35 @@ function fillTemplate(template: string, index: number): string {
   });
 }
 
+const HEADLINES_HI: Record<RawNewsItem["category"], string[]> = {
+  politics: [
+    "सरकार ने नई दिल्ली में नीति अपडेट दर्ज किया",
+    "मुंबई में अधिकारियों ने बैठक का विवरण जारी किया",
+    "राज्य प्रशासन ने क्षेत्रीय आंकड़े प्रकाशित किए",
+    "संसद सत्र ने विधेयक पर कार्रवाई दर्ज की",
+    "अधिसूचना में प्रक्रिया और तिथियां बताई गईं",
+  ],
+  sports: [
+    "मैच परिणाम और स्कोरकार्ड जारी",
+    "टीम ने आगामी टूर्नामेंट के लिए स्कवाड जारी किया",
+    "टूर्नामेंट कार्यक्रम अपडेट किया गया",
+    "खिलाड़ी की भागीदारी की सूची प्रकाशित",
+    "खेल संस्था ने समय-सारणी की पुष्टि की",
+  ],
+  "science-tech": [
+    "शोध टीम ने अध्ययन डेटा साझा किया",
+    "तकनीकी उत्पाद की उपलब्धता तिथियां सूचीबद्ध",
+    "संस्थान ने परियोजना निष्कर्ष प्रकाशित किए",
+    "उत्पाद विनिर्देश उपयोगकर्ताओं के लिए जारी",
+    "परीक्षण परिणाम दस्तावेज़ किए गए",
+  ],
+};
+
 function buildMockItem(
   category: RawNewsItem["category"],
   index: number,
-  templates: string[]
+  templates: string[],
+  language: NewsLanguage,
 ): RawNewsItem {
   const template = templates[index % templates.length];
   const summary = trimSummary(fillTemplate(template, index));
@@ -86,32 +112,34 @@ function buildMockItem(
     ],
   };
 
-  const headlineList = headlines[category];
+  const headlineList =
+    language === "hi" ? HEADLINES_HI[category] : headlines[category];
   const headline = headlineList[index % headlineList.length];
   const publishedAt = new Date(Date.now() - index * 3600000);
 
   return {
+    language,
     category,
     headline,
     summary,
-    sourceUrl: `https://example.com/${category}/${index + 1}`,
-    sourceName: "Mock Source",
+    sourceUrl: `https://example.com/${language}/${category}/${index + 1}`,
+    sourceName: language === "hi" ? "मॉक स्रोत" : "Mock Source",
     publishedAt,
     imageUrl: null,
   };
 }
 
-export function generateMockNews(): RawNewsItem[] {
+export function generateMockNews(language: NewsLanguage = "en"): RawNewsItem[] {
   const items: RawNewsItem[] = [];
 
   for (let i = 0; i < 50; i++) {
-    items.push(buildMockItem("politics", i, POLITICS_TEMPLATES));
+    items.push(buildMockItem("politics", i, POLITICS_TEMPLATES, language));
   }
   for (let i = 0; i < 20; i++) {
-    items.push(buildMockItem("sports", i, SPORTS_TEMPLATES));
+    items.push(buildMockItem("sports", i, SPORTS_TEMPLATES, language));
   }
   for (let i = 0; i < 20; i++) {
-    items.push(buildMockItem("science-tech", i, SCIENCE_TEMPLATES));
+    items.push(buildMockItem("science-tech", i, SCIENCE_TEMPLATES, language));
   }
 
   return items;

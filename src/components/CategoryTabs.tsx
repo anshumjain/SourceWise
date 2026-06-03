@@ -1,21 +1,23 @@
-import { CATEGORY_LABELS, CATEGORY_SLUGS, type CategorySlug } from "@/lib/types";
+import { buildHomeHref, type NewsLanguage } from "@/lib/language";
+import { getCategoryLabel, CATEGORY_SLUGS, type CategorySlug } from "@/lib/types";
 
 interface CategoryTabsProps {
   active: CategorySlug | "all";
+  language?: NewsLanguage;
   onChange?: (category: CategorySlug | "all") => void;
-  basePath?: string;
 }
 
 export function CategoryTabs({
   active,
+  language = "en",
   onChange,
-  basePath = "/",
 }: CategoryTabsProps) {
+  const allLabel = language === "hi" ? "सभी" : "All";
   const tabs: Array<{ id: CategorySlug | "all"; label: string }> = [
-    { id: "all", label: "All" },
+    { id: "all", label: allLabel },
     ...CATEGORY_SLUGS.map((slug) => ({
       id: slug,
-      label: CATEGORY_LABELS[slug],
+      label: getCategoryLabel(slug, language),
     })),
   ];
 
@@ -27,8 +29,10 @@ export function CategoryTabs({
     >
       {tabs.map((tab) => {
         const isActive = active === tab.id;
-        const href =
-          tab.id === "all" ? basePath : `${basePath}?category=${tab.id}`;
+        const href = buildHomeHref({
+          lang: language,
+          category: tab.id === "all" ? undefined : tab.id,
+        });
 
         if (onChange) {
           return (

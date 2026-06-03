@@ -16,7 +16,9 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-Set `USE_MOCK_NEWS=true` in `.env` to seed **90 mock articles** without RSS/API keys.
+Set `USE_MOCK_NEWS=true` in `.env` to seed **90 mock articles per language** (180 total) without RSS/API keys.
+
+Use the **English / हिंदी** toggle in the header (`?lang=hi` for Hindi).
 
 ## Architecture
 

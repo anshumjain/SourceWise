@@ -3,8 +3,9 @@
 import { useMemo, useState } from "react";
 import { ArticleCard } from "@/components/ArticleCard";
 import { useFeedView, ViewToggle } from "@/components/ViewToggle";
+import type { NewsLanguage } from "@/lib/language";
 import {
-  CATEGORY_LABELS,
+  getCategoryLabel,
   CATEGORY_SLUGS,
   type CategorySlug,
   type EditionResponse,
@@ -21,6 +22,7 @@ interface ArticleFeedProps {
   editionDate: string;
   siteUrl: string;
   activeCategory: CategorySlug | "all";
+  language?: NewsLanguage;
 }
 
 export function ArticleFeed({
@@ -28,6 +30,7 @@ export function ArticleFeed({
   editionDate,
   siteUrl,
   activeCategory,
+  language = "en",
 }: ArticleFeedProps) {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [view, setView] = useFeedView();
@@ -79,7 +82,7 @@ export function ArticleFeed({
                       Section
                     </p>
                     <h2 className="font-serif text-2xl font-semibold text-stone-900 dark:text-stone-50">
-                      {CATEGORY_LABELS[item.slug]}
+                      {getCategoryLabel(item.slug, language)}
                     </h2>
                   </div>
                   <span className="text-sm text-stone-400 dark:text-stone-500">

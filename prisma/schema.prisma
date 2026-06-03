@@ -20,6 +20,7 @@ model Article {
   id          String   @id @default(cuid())
   editionId   String
   edition     Edition  @relation(fields: [editionId], references: [id], onDelete: Cascade)
+  language    String   @default("en")
   category    String
   headline    String
   summary     String
@@ -34,6 +35,7 @@ model Article {
   votes       Vote[]
 
   @@index([editionId, category])
+  @@index([editionId, language, category])
 }
 
 model Vote {
