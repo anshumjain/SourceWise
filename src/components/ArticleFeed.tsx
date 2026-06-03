@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { ArticleCard } from "@/components/ArticleCard";
 import { useFeedView, ViewToggle } from "@/components/ViewToggle";
 import type { NewsLanguage } from "@/lib/language";
+import { getUiCopy } from "@/lib/ui-copy";
 import {
   getCategoryLabel,
   CATEGORY_SLUGS,
@@ -34,6 +35,7 @@ export function ArticleFeed({
 }: ArticleFeedProps) {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [view, setView] = useFeedView();
+  const copy = getUiCopy(language);
 
   const feedItems = useMemo(() => {
     if (activeCategory !== "all") {
@@ -79,14 +81,14 @@ export function ArticleFeed({
                 <div className="mb-4 flex items-end justify-between gap-4">
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700 dark:text-emerald-400">
-                      Section
+                      {copy.section}
                     </p>
                     <h2 className="font-serif text-2xl font-semibold text-stone-900 dark:text-stone-50">
                       {getCategoryLabel(item.slug, language)}
                     </h2>
                   </div>
                   <span className="text-sm text-stone-400 dark:text-stone-500">
-                    {item.count} stories
+                    {copy.storiesCount(item.count)}
                   </span>
                 </div>
               </div>
@@ -100,6 +102,7 @@ export function ArticleFeed({
               editionDate={editionDate}
               siteUrl={siteUrl}
               layout={view}
+              language={language}
             />
           );
         })}
@@ -111,8 +114,9 @@ export function ArticleFeed({
             type="button"
             onClick={() => setVisibleCount((count) => count + PAGE_SIZE)}
             className="rounded-full border border-stone-300 bg-white px-8 py-3 text-sm font-medium text-stone-800 shadow-sm transition hover:border-stone-400 hover:bg-stone-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 focus-visible:ring-offset-stone-100 dark:border-stone-800 dark:bg-stone-950/60 dark:text-stone-100 dark:shadow-none dark:hover:border-stone-700 dark:hover:bg-stone-900/40 dark:focus-visible:ring-offset-stone-950"
+            aria-label={copy.aria.loadMoreStories}
           >
-            Load more stories
+            {copy.aria.loadMoreStories}
           </button>
         </div>
       )}

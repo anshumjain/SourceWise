@@ -6,7 +6,11 @@ import { getArticleById } from "@/lib/edition";
 import { buildEditionResponse } from "@/lib/edition-response";
 import { formatEditionDate } from "@/lib/ist";
 import { buildHomeHref, parseLanguage } from "@/lib/language";
-import { getCategoryLabel, prismaCategoryToSlug } from "@/lib/types";
+import { getUiCopy } from "@/lib/ui-copy";
+import {
+  getCategoryLabel,
+  prismaCategoryToSlug,
+} from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -82,6 +86,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
           editionDate={articleRecord.edition.date}
           siteUrl={siteUrl}
           expanded
+          language={articleLang}
         />
       </div>
     </div>

@@ -1,14 +1,26 @@
 "use client";
 
 import { useToast } from "./ToastProvider";
+import type { NewsLanguage } from "@/lib/language";
+import { getUiCopy } from "@/lib/ui-copy";
+import { useNewsLanguage } from "@/hooks/use-news-language";
 
 interface ShareButtonProps {
   title: string;
   url: string;
   compact?: boolean;
+  language?: NewsLanguage;
 }
 
-export function ShareButton({ title, url, compact = false }: ShareButtonProps) {
+export function ShareButton({
+  title,
+  url,
+  compact = false,
+  language: languageProp,
+}: ShareButtonProps) {
+  const languageFromUrl = useNewsLanguage();
+  const language = languageProp ?? languageFromUrl;
+  const ui = getUiCopy(language);
   const { showToast } = useToast();
 
   async function handleShare() {
@@ -23,9 +35,9 @@ export function ShareButton({ title, url, compact = false }: ShareButtonProps) {
 
     try {
       await navigator.clipboard.writeText(url);
-      showToast("Link copied");
+      showToast(ui.toast.linkCopied);
     } catch {
-      showToast("Could not copy link");
+      showToast(ui.toast.copyFailed);
     }
   }
 
@@ -39,7 +51,7 @@ export function ShareButton({ title, url, compact = false }: ShareButtonProps) {
           type="button"
           onClick={handleShare}
           className="rounded-full p-2 text-stone-500 transition hover:bg-stone-100 hover:text-stone-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 focus-visible:ring-offset-stone-100 dark:text-stone-400 dark:hover:bg-stone-900/60 dark:hover:text-stone-200 dark:focus-visible:ring-offset-stone-950"
-          aria-label={`Share ${title}`}
+          aria-label={ui.aria.shareArticle(title)}
         >
           <ShareIcon />
         </button>
@@ -48,7 +60,7 @@ export function ShareButton({ title, url, compact = false }: ShareButtonProps) {
           target="_blank"
           rel="noopener noreferrer"
           className="rounded-full p-2 text-stone-500 transition hover:bg-stone-100 hover:text-stone-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 focus-visible:ring-offset-stone-100 dark:text-stone-400 dark:hover:bg-stone-900/60 dark:hover:text-stone-200 dark:focus-visible:ring-offset-stone-950"
-          aria-label="Share on WhatsApp"
+          aria-label={ui.aria.shareWhatsApp}
         >
           <WhatsAppIcon />
         </a>
@@ -62,10 +74,10 @@ export function ShareButton({ title, url, compact = false }: ShareButtonProps) {
         type="button"
         onClick={handleShare}
         className="inline-flex items-center gap-2 rounded-full border border-stone-200 bg-white px-4 py-2 text-sm font-medium text-stone-700 transition hover:border-stone-300 hover:bg-stone-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 focus-visible:ring-offset-stone-100 dark:border-stone-800 dark:bg-stone-950/60 dark:text-stone-200 dark:hover:border-stone-700 dark:hover:bg-stone-900/40 dark:focus-visible:ring-offset-stone-950"
-        aria-label={`Share ${title}`}
+        aria-label={ui.aria.shareArticle(title)}
       >
         <ShareIcon />
-        Share
+        {ui.share}
       </button>
       <a
         href={`https://wa.me/?text=${encodedTitle}%20${encoded}`}

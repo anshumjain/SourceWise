@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Suspense } from "react";
+import { DocumentLang } from "@/components/DocumentLang";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
@@ -21,6 +22,9 @@ export function Header() {
           </div>
         </Link>
         <nav className="flex items-center gap-2 text-sm">
+          <Suspense fallback={null}>
+            <DocumentLang />
+          </Suspense>
           <Suspense
             fallback={
               <div className="h-8 w-[7.5rem] rounded-full bg-stone-100 dark:bg-stone-900/60" />
@@ -28,7 +32,13 @@ export function Header() {
           >
             <LanguageToggle />
           </Suspense>
-          <ThemeToggle />
+          <Suspense
+            fallback={
+              <div className="h-9 w-24 rounded-full bg-stone-100 dark:bg-stone-900/60" />
+            }
+          >
+            <ThemeToggle />
+          </Suspense>
           <Link
             href="/about"
             className="rounded-full px-3 py-1.5 text-stone-600 transition hover:bg-stone-100 hover:text-stone-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 focus-visible:ring-offset-stone-100 dark:text-stone-300 dark:hover:bg-stone-900/50 dark:hover:text-stone-50 dark:focus-visible:ring-offset-stone-950"

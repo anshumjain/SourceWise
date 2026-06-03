@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useSyncExternalStore } from "react";
+import { useNewsLanguage } from "@/hooks/use-news-language";
+import { getUiCopy } from "@/lib/ui-copy";
 import {
   persistTheme,
   readStoredTheme,
@@ -20,6 +22,8 @@ function applyTheme(mode: ThemeMode) {
 }
 
 export function ThemeToggle() {
+  const language = useNewsLanguage();
+  const ui = getUiCopy(language);
   const mode = useSyncExternalStore(
     subscribeToThemeChanges,
     readStoredTheme,
@@ -45,10 +49,11 @@ export function ThemeToggle() {
   }, [mode]);
 
   const { label, Icon } = useMemo(() => {
-    if (mode === "light") return { label: "Light", Icon: SunIcon };
-    if (mode === "dark") return { label: "Dark", Icon: MoonIcon };
-    return { label: "System", Icon: MonitorIcon };
-  }, [mode]);
+    if (mode === "light")
+      return { label: ui.theme.light, Icon: SunIcon };
+    if (mode === "dark") return { label: ui.theme.dark, Icon: MoonIcon };
+    return { label: ui.theme.system, Icon: MonitorIcon };
+  }, [mode, ui.theme.dark, ui.theme.light, ui.theme.system]);
 
   function cycleMode() {
     const idx = THEME_MODES.indexOf(mode);
@@ -62,7 +67,7 @@ export function ThemeToggle() {
       type="button"
       onClick={cycleMode}
       className="inline-flex items-center gap-2 rounded-full border border-stone-200/80 bg-white/80 px-3 py-1.5 text-sm font-medium text-stone-700 shadow-sm shadow-stone-200/30 backdrop-blur transition hover:border-stone-300 hover:bg-stone-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 focus-visible:ring-offset-stone-100 dark:border-stone-800/80 dark:bg-stone-950/70 dark:text-stone-200 dark:shadow-none dark:hover:border-stone-700 dark:hover:bg-stone-900/40 dark:focus-visible:ring-offset-stone-950"
-      aria-label={`Theme: ${label}. Activate to switch.`}
+      aria-label={ui.aria.themeSwitch(label)}
     >
       <Icon />
       <span className="hidden sm:inline">{label}</span>

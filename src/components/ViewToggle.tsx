@@ -1,6 +1,8 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
+import { useNewsLanguage } from "@/hooks/use-news-language";
+import { getUiCopy } from "@/lib/ui-copy";
 
 export type FeedView = "grid" | "list";
 
@@ -27,11 +29,14 @@ interface ViewToggleProps {
 }
 
 export function ViewToggle({ value, onChange }: ViewToggleProps) {
+  const language = useNewsLanguage();
+  const copy = getUiCopy(language);
+
   return (
     <div
       className="inline-flex rounded-full border border-stone-200 bg-white p-1 dark:border-stone-800 dark:bg-stone-950/60"
       role="group"
-      aria-label="Feed layout"
+      aria-label={copy.aria.feedLayout}
     >
       <button
         type="button"
@@ -43,7 +48,7 @@ export function ViewToggle({ value, onChange }: ViewToggleProps) {
             : "text-stone-600 hover:text-stone-900 dark:text-stone-300 dark:hover:text-stone-50"
         }`}
       >
-        Grid
+        {copy.view.grid}
       </button>
       <button
         type="button"
@@ -55,7 +60,7 @@ export function ViewToggle({ value, onChange }: ViewToggleProps) {
             : "text-stone-600 hover:text-stone-900 dark:text-stone-300 dark:hover:text-stone-50"
         }`}
       >
-        List
+        {copy.view.list}
       </button>
     </div>
   );
@@ -65,7 +70,7 @@ export function useFeedView(): [FeedView, (view: FeedView) => void] {
   const view = useSyncExternalStore(
     subscribeToViewChanges,
     readStoredView,
-    () => "grid" as FeedView
+    () => "grid" as FeedView,
   );
 
   function updateView(next: FeedView) {

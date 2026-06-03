@@ -1,4 +1,5 @@
 import { buildHomeHref, type NewsLanguage } from "@/lib/language";
+import { getUiCopy } from "@/lib/ui-copy";
 import { getCategoryLabel, CATEGORY_SLUGS, type CategorySlug } from "@/lib/types";
 
 interface CategoryTabsProps {
@@ -13,6 +14,7 @@ export function CategoryTabs({
   onChange,
 }: CategoryTabsProps) {
   const allLabel = language === "hi" ? "सभी" : "All";
+  const copy = getUiCopy(language);
   const tabs: Array<{ id: CategorySlug | "all"; label: string }> = [
     { id: "all", label: allLabel },
     ...CATEGORY_SLUGS.map((slug) => ({
@@ -25,7 +27,7 @@ export function CategoryTabs({
     <div
       className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       role="tablist"
-      aria-label="News categories"
+      aria-label={copy.aria.newsCategories}
     >
       {tabs.map((tab) => {
         const isActive = active === tab.id;

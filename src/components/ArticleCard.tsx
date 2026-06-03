@@ -1,6 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { EditionResponse } from "@/lib/types";
+import type { NewsLanguage } from "@/lib/language";
+import { getUiCopy } from "@/lib/ui-copy";
 import type { FeedView } from "./ViewToggle";
 import { ShareButton } from "./ShareButton";
 import { SentimentBar } from "./SentimentBar";
@@ -13,6 +15,7 @@ interface ArticleCardProps {
   siteUrl: string;
   expanded?: boolean;
   layout?: FeedView;
+  language?: NewsLanguage;
 }
 
 function ArticleImage({
@@ -60,7 +63,9 @@ export function ArticleCard({
   siteUrl,
   expanded = false,
   layout = "grid",
+  language = "en",
 }: ArticleCardProps) {
+  const ui = getUiCopy(language);
   const shareUrl = `${siteUrl}/article/${article.id}`;
   const summaryPreview =
     article.summary.length > 180 && !expanded
@@ -90,12 +95,17 @@ export function ArticleCard({
               </time>
               <span
                 className="rounded-full bg-stone-100 px-2 py-1 text-xs text-stone-600 dark:bg-stone-900/70 dark:text-stone-300"
-                aria-label={`Total votes: ${article.totalVotes}`}
+                aria-label={ui.aria.totalVotes(article.totalVotes)}
               >
-                {article.totalVotes} votes
+                {ui.votesCount(article.totalVotes)}
               </span>
               {!expanded && (
-                <ShareButton title={article.headline} url={shareUrl} compact />
+                <ShareButton
+                  title={article.headline}
+                  url={shareUrl}
+                  compact
+                  language={language}
+                />
               )}
             </div>
           </div>
@@ -124,7 +134,7 @@ export function ArticleCard({
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 rounded-full bg-stone-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-stone-800 dark:bg-stone-50 dark:text-stone-900 dark:hover:bg-stone-200"
             >
-              Read at {article.sourceName}
+              {ui.readAtSource(article.sourceName)}
               <span aria-hidden="true">→</span>
             </a>
             {article.videoUrl && (
@@ -134,14 +144,18 @@ export function ArticleCard({
                 rel="noopener noreferrer"
                 className="text-sm text-stone-500 hover:text-stone-800 dark:text-stone-400 dark:hover:text-stone-200"
               >
-                Related video
+                {ui.relatedVideo}
               </a>
             )}
           </div>
 
           {expanded && (
             <div className="mt-4">
-              <ShareButton title={article.headline} url={shareUrl} />
+              <ShareButton
+                title={article.headline}
+                url={shareUrl}
+                language={language}
+              />
             </div>
           )}
 
@@ -151,6 +165,7 @@ export function ArticleCard({
             initialGoodVotes={article.goodVotes}
             initialBadVotes={article.badVotes}
             category={article.category}
+            language={language}
           />
         </div>
       </div>

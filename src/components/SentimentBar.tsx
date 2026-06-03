@@ -8,6 +8,8 @@ import {
   subscribeToVoteChanges,
 } from "@/lib/voter";
 import type { CategorySlug } from "@/lib/types";
+import type { NewsLanguage } from "@/lib/language";
+import { getUiCopy, getVoteCopy } from "@/lib/ui-copy";
 
 interface SentimentBarProps {
   articleId: string;
@@ -15,6 +17,7 @@ interface SentimentBarProps {
   initialGoodVotes: number;
   initialBadVotes: number;
   category: CategorySlug;
+  language?: NewsLanguage;
 }
 
 export function SentimentBar({
@@ -23,6 +26,7 @@ export function SentimentBar({
   initialGoodVotes,
   initialBadVotes,
   category,
+  language = "en",
 }: SentimentBarProps) {
   const [goodVotes, setGoodVotes] = useState(initialGoodVotes);
   const [badVotes, setBadVotes] = useState(initialBadVotes);
@@ -94,7 +98,8 @@ export function SentimentBar({
     background: `linear-gradient(to right, #059669 0%, #059669 ${goodPercent}%, #ea580c ${goodPercent}%, #ea580c 100%)`,
   };
 
-  const voteCopy = getVoteCopy(category);
+  const voteCopy = getVoteCopy(category, language);
+  const ui = getUiCopy(language);
 
   return (
     <div className="mt-4 border-t border-stone-100 pt-4 dark:border-stone-900/80">
@@ -124,46 +129,16 @@ export function SentimentBar({
       <div
         className="h-2 overflow-hidden rounded-full bg-stone-100 dark:bg-stone-900/70"
         role="img"
-        aria-label={`Sentiment bar: ${goodPercent}% good, ${badPercent}% bad`}
+        aria-label={ui.aria.sentimentBar(goodPercent, badPercent)}
       >
         <div className="h-full transition-all duration-500" style={gradientStyle} />
       </div>
       {totalVotes > 0 && (
         <p className="mt-2 text-xs text-stone-400 dark:text-stone-500">
-          {totalVotes} reader {totalVotes === 1 ? "vote" : "votes"}
+          {ui.readerVotes(totalVotes)}
         </p>
       )}
       {error && <p className="mt-2 text-xs text-red-600 dark:text-red-400">{error}</p>}
     </div>
   );
-}
-
-function getVoteCopy(category: CategorySlug) {
-  if (category === "sports") {
-    return {
-      question: "Do you like this story?",
-      goodLabel: "Like",
-      badLabel: "Don’t like",
-      goodAriaLabel: "Vote like this story",
-      badAriaLabel: "Vote do not like this story",
-    } as const;
-  }
-
-  if (category === "science-tech") {
-    return {
-      question: "Is this interesting to you?",
-      goodLabel: "Interesting",
-      badLabel: "Not interested",
-      goodAriaLabel: "Vote interesting",
-      badAriaLabel: "Vote not interested",
-    } as const;
-  }
-
-  return {
-    question: "Is this good for the country?",
-    goodLabel: "Good",
-    badLabel: "Bad",
-    goodAriaLabel: "Vote good for the country",
-    badAriaLabel: "Vote bad for the country",
-  } as const;
 }

@@ -3,23 +3,25 @@
 import { useSearchParams } from "next/navigation";
 import {
   buildHomeHref,
-  DEFAULT_LANGUAGE,
   LANGUAGE_LABELS,
   type NewsLanguage,
 } from "@/lib/language";
+import { getUiCopy } from "@/lib/ui-copy";
+import { useNewsLanguage } from "@/hooks/use-news-language";
 
 const LANGUAGES: NewsLanguage[] = ["en", "hi"];
 
 export function LanguageToggle() {
   const searchParams = useSearchParams();
-  const active = (searchParams.get("lang") === "hi" ? "hi" : "en") as NewsLanguage;
+  const active = useNewsLanguage();
   const category = searchParams.get("category") ?? undefined;
+  const copy = getUiCopy(active);
 
   return (
     <div
       className="flex rounded-full border border-stone-200 bg-stone-100/80 p-0.5 dark:border-stone-700 dark:bg-stone-900/60"
       role="group"
-      aria-label="News language"
+      aria-label={copy.aria.newsLanguage}
     >
       {LANGUAGES.map((lang) => {
         const isActive = active === lang;
@@ -45,9 +47,4 @@ export function LanguageToggle() {
       })}
     </div>
   );
-}
-
-export function useNewsLanguage(): NewsLanguage {
-  const searchParams = useSearchParams();
-  return searchParams.get("lang") === "hi" ? "hi" : DEFAULT_LANGUAGE;
 }
