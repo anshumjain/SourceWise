@@ -1,4 +1,5 @@
 import type { NewsLanguage } from "./language";
+import { sanitizeSummary } from "./news-utils";
 import {
   getCategoryLabel,
   prismaCategoryToSlug,
@@ -26,7 +27,7 @@ export function buildEditionResponse(
       return {
         id: article.id,
         headline: article.headline,
-        summary: article.summary,
+        summary: sanitizeSummary(article.summary, article.headline),
         category,
         categoryLabel: getCategoryLabel(category, language),
         sourceUrl: article.sourceUrl,

@@ -137,8 +137,42 @@ export function dedupeNewsItems(items: RawNewsItem[]): RawNewsItem[] {
   return result;
 }
 
+function decodeHtmlEntities(text: string): string {
+  return text
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .replace(/&#x([0-9a-f]+);/gi, (_, hex) =>
+      String.fromCharCode(parseInt(hex, 16)),
+    )
+    .replace(/&#(\d+);/g, (_, num) => String.fromCharCode(Number(num)));
+}
+
+/** Strip RSS/HTML markup so summaries never show raw tags or hrefs. */
+export function stripHtmlToText(html: string): string {
+  const withoutScripts = html
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<noscript[\s\S]*?<\/noscript>/gi, " ");
+
+  return decodeHtmlEntities(withoutScripts.replace(/<[^>]*>/g, " "))
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+export function sanitizeSummary(text: string, fallback = ""): string {
+  const cleaned = stripHtmlToText(text);
+  return cleaned || stripHtmlToText(fallback);
+}
+
 export function trimSummary(text: string, maxWords = 100): string {
-  const words = text.replace(/\s+/g, " ").trim().split(" ");
+  const cleaned = sanitizeSummary(text);
+  if (!cleaned) return "";
+
+  const words = cleaned.split(" ");
   if (words.length <= maxWords) return words.join(" ");
   return `${words.slice(0, maxWords).join(" ")}…`;
 }

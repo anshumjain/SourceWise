@@ -186,11 +186,15 @@ async function fetchFeed(
             ? enclosure
             : undefined;
 
+        const headline = (item.title ?? "Untitled").trim();
+        const summary =
+          trimSummary(content || headline) || trimSummary(headline);
+
         return {
           language,
           category: source.category,
-          headline: (item.title ?? "Untitled").trim(),
-          summary: trimSummary(content || item.title || ""),
+          headline,
+          summary,
           sourceUrl: item.link ?? source.url,
           sourceName: source.name,
           publishedAt,

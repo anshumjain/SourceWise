@@ -124,22 +124,22 @@ export function ArticleReaderSheet({
         onClick={onClose}
       />
 
-      <div className="relative flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-t-3xl border border-stone-200 bg-white shadow-2xl sm:rounded-3xl dark:border-stone-800 dark:bg-stone-950">
-        <div className="flex items-center justify-between border-b border-stone-200 px-4 py-3 sm:px-6 dark:border-stone-800">
-          <p className="text-xs text-stone-500 dark:text-stone-400">
+      <div className="relative flex h-[min(92dvh,92vh)] w-full max-w-3xl flex-col overflow-hidden rounded-t-3xl border border-stone-200 bg-white shadow-2xl sm:rounded-3xl dark:border-stone-800 dark:bg-stone-950">
+        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-stone-200 bg-white px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))] sm:px-6 dark:border-stone-800 dark:bg-stone-950">
+          <p className="hidden min-w-0 flex-1 text-xs leading-snug text-stone-500 sm:block dark:text-stone-400">
             {copy.reader.closeHint}
           </p>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-full border border-stone-300 px-3 py-1.5 text-sm font-medium text-stone-700 transition hover:bg-stone-100 dark:border-stone-700 dark:text-stone-200 dark:hover:bg-stone-900"
+            className="ml-auto shrink-0 rounded-full border border-stone-300 bg-white px-3.5 py-2 text-base font-medium leading-none text-stone-700 shadow-sm transition hover:bg-stone-100 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-200 dark:hover:bg-stone-900"
             aria-label={copy.aria.closeArticle}
           >
             ✕
           </button>
         </div>
 
-        <div className="overflow-y-auto overscroll-contain px-4 py-5 sm:px-6">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-5 sm:px-6">
           <div className="mb-4 flex flex-wrap items-center gap-2">
             <span className="rounded-full bg-stone-900 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-white dark:bg-stone-50 dark:text-stone-900">
               {article.categoryLabel}
