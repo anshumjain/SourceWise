@@ -8,6 +8,7 @@
     "db:deploy": "prisma migrate deploy",
     "start": "next start",
     "lint": "eslint",
+    "check:env": "node scripts/check-env-security.mjs",
     "postinstall": "prisma generate",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
