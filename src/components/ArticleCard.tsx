@@ -3,7 +3,6 @@ import Link from "next/link";
 import type { EditionResponse } from "@/lib/types";
 import type { NewsLanguage } from "@/lib/language";
 import { getUiCopy } from "@/lib/ui-copy";
-import type { FeedView } from "./ViewToggle";
 import { ShareButton } from "./ShareButton";
 import { SentimentBar } from "./SentimentBar";
 
@@ -14,32 +13,20 @@ interface ArticleCardProps {
   editionDate: string;
   siteUrl: string;
   expanded?: boolean;
-  layout?: FeedView;
   language?: NewsLanguage;
   onOpenArticle?: (article: Article) => void;
 }
 
-function ArticleImage({
-  imageUrl,
-  layout,
-}: {
-  imageUrl: string | null;
-  layout: FeedView;
-}) {
-  const listClasses =
-    layout === "list"
-      ? "aspect-[16/10] w-full sm:w-40 sm:shrink-0"
-      : "aspect-[16/10] w-full";
-
+function ArticleImage({ imageUrl }: { imageUrl: string | null }) {
   if (imageUrl) {
     return (
-      <div className={`relative overflow-hidden bg-stone-100 dark:bg-stone-900/70 ${listClasses}`}>
+      <div className="relative aspect-[16/10] w-full overflow-hidden bg-stone-100 dark:bg-stone-900/70">
         <Image
           src={imageUrl}
           alt=""
           fill
           className="object-cover transition duration-500 group-hover:scale-[1.02]"
-          sizes={layout === "list" ? "160px" : "(max-width: 768px) 100vw, 400px"}
+          sizes="(max-width: 768px) 100vw, 400px"
           unoptimized
         />
       </div>
@@ -48,7 +35,7 @@ function ArticleImage({
 
   return (
     <div
-      className={`flex items-center justify-center bg-gradient-to-br from-stone-100 to-stone-200 dark:from-stone-900/70 dark:to-stone-800/70 ${listClasses}`}
+      className="flex aspect-[16/10] w-full items-center justify-center bg-gradient-to-br from-stone-100 to-stone-200 dark:from-stone-900/70 dark:to-stone-800/70"
       aria-hidden="true"
     >
       <span className="font-serif text-2xl text-stone-400/70 dark:text-stone-500/80">
@@ -63,7 +50,6 @@ export function ArticleCard({
   editionDate,
   siteUrl,
   expanded = false,
-  layout = "grid",
   language = "en",
   onOpenArticle,
 }: ArticleCardProps) {
@@ -101,17 +87,17 @@ export function ArticleCard({
       onClick={openReader}
       className="block w-full text-left"
     >
-      <ArticleImage imageUrl={article.imageUrl} layout={layout} />
+      <ArticleImage imageUrl={article.imageUrl} />
     </button>
   ) : (
     <Link href={`/article/${article.id}`} className="block">
-      <ArticleImage imageUrl={article.imageUrl} layout={layout} />
+      <ArticleImage imageUrl={article.imageUrl} />
     </Link>
   );
 
   return (
     <article className="group overflow-hidden rounded-2xl border border-stone-200/80 bg-white shadow-sm shadow-stone-200/50 transition hover:border-stone-300 hover:shadow-md hover:shadow-stone-200/60 dark:border-stone-800 dark:bg-stone-950/60 dark:shadow-none dark:hover:border-stone-700">
-      <div className={layout === "list" ? "flex flex-col sm:flex-row" : "flex flex-col"}>
+      <div className="flex flex-col">
         {imageTrigger}
 
         <div className="flex flex-1 flex-col p-5">

@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react";
 import { ArticleCard } from "@/components/ArticleCard";
 import { useArticleReader } from "@/components/ArticleReaderProvider";
-import { useFeedView, ViewToggle } from "@/components/ViewToggle";
 import type { NewsLanguage } from "@/lib/language";
 import { getUiCopy } from "@/lib/ui-copy";
 import {
@@ -35,14 +34,13 @@ export function ArticleFeed({
   language = "en",
 }: ArticleFeedProps) {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
-  const [view, setView] = useFeedView();
   const copy = getUiCopy(language);
   const { openArticle } = useArticleReader();
 
   const feedItems = useMemo(() => {
     if (activeCategory !== "all") {
       return articles.map(
-        (article): FeedItem => ({ type: "article", article })
+        (article): FeedItem => ({ type: "article", article }),
       );
     }
 
@@ -59,26 +57,16 @@ export function ArticleFeed({
   }, [activeCategory, articles, language]);
 
   const visibleItems = feedItems.slice(0, visibleCount);
-  const containerClass =
-    view === "grid"
-      ? "grid gap-5 md:grid-cols-2 xl:grid-cols-3"
-      : "flex flex-col gap-4";
 
   return (
     <>
-      <div className="mb-5 flex items-center justify-end">
-        <ViewToggle value={view} onChange={setView} />
-      </div>
-
-      <div className={containerClass}>
+      <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
         {visibleItems.map((item) => {
           if (item.type === "header") {
             return (
               <div
                 key={`header-${item.slug}`}
-                className={`border-t border-stone-200 pt-8 dark:border-stone-800 ${
-                  view === "grid" ? "md:col-span-2 xl:col-span-3" : ""
-                }`}
+                className="border-t border-stone-200 pt-8 md:col-span-2 xl:col-span-3 dark:border-stone-800"
               >
                 <div className="mb-4 flex items-end justify-between gap-4">
                   <div>
@@ -103,7 +91,6 @@ export function ArticleFeed({
               article={item.article}
               editionDate={editionDate}
               siteUrl={siteUrl}
-              layout={view}
               language={language}
               onOpenArticle={openArticle}
             />
