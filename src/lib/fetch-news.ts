@@ -1,11 +1,14 @@
 import Parser from "rss-parser";
 import type { NewsLanguage } from "./language";
 import { textMatchesLanguage } from "./language-detect";
-import type { RawNewsItem, CategorySlug } from "./types";
+import {
+  getCategoryQuotas,
+  type CategorySlug,
+  type RawNewsItem,
+} from "./types";
 import { itemBelongsInCategory } from "./category-classifier";
 import { dedupeNewsItems, trimSummary } from "./news-utils";
 import { generateMockNews } from "./mock-news";
-import { getCategoryQuotas, type CategorySlug } from "./types";
 
 const parser = new Parser({
   timeout: 15000,
