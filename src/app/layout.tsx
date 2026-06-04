@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { Source_Serif_4, Inter } from "next/font/google";
-import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import { Header } from "@/components/Header";
 import { SiteFooter } from "@/components/SiteFooter";
 import { ToastProvider } from "@/components/ToastProvider";
@@ -35,6 +34,8 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const gaId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
+
   return (
     <html
       lang="en"
@@ -43,6 +44,21 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <head>
+        {gaId ? (
+          <>
+            <script async src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`} />
+            <script
+              dangerouslySetInnerHTML={{
+                __html: `
+                  window.dataLayer = window.dataLayer || [];
+                  function gtag(){dataLayer.push(arguments);}
+                  gtag('js', new Date());
+                  gtag('config', '${gaId}');
+                `,
+              }}
+            />
+          </>
+        ) : null}
         <script
           // Runs before React hydration to prevent theme flash.
           dangerouslySetInnerHTML={{
@@ -55,7 +71,6 @@ export default function RootLayout({
         className="min-h-full flex flex-col bg-stone-100 font-sans text-stone-900 antialiased dark:bg-stone-950 dark:text-stone-50"
         suppressHydrationWarning
       >
-        <GoogleAnalytics />
         <ToastProvider>
           <Header />
           <main className="flex-1">{children}</main>
