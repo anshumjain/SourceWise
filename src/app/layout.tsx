@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { Source_Serif_4, Inter } from "next/font/google";
+import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import { Header } from "@/components/Header";
 import { SiteFooter } from "@/components/SiteFooter";
 import { ToastProvider } from "@/components/ToastProvider";
@@ -54,6 +55,7 @@ export default function RootLayout({
         className="min-h-full flex flex-col bg-stone-100 font-sans text-stone-900 antialiased dark:bg-stone-950 dark:text-stone-50"
         suppressHydrationWarning
       >
+        <GoogleAnalytics />
         <ToastProvider>
           <Header />
           <main className="flex-1">{children}</main>

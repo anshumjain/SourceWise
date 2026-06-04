@@ -25,6 +25,20 @@ const TECH_URL_PATTERNS = [
   /\/auto(?:\/|$)/i,
 ];
 
+const MARKETS_URL_PATTERNS = [
+  /\/markets?(?:\/|$)/i,
+  /\/business(?:\/|$)/i,
+  /\/economy(?:\/|$)/i,
+  /\/companies(?:\/|$)/i,
+  /\/stocks?(?:\/|$)/i,
+  /moneycontrol\.com/i,
+  /economictimes\.indiatimes\.com\/markets/i,
+  /livemint\.com\/market/i,
+];
+
+const MARKETS_KEYWORDS =
+  /\b(nifty|sensex|bse|nse|rbi|sebi|stock|stocks|shares|share price|ipo|forex|rupee|bond|mutual fund|earnings|quarterly results|gdp|inflation|market cap|trading|investor|portfolio|dividend|fii|dii|market(?:s)?)\b/i;
+
 const POLITICS_URL_PATTERNS = [
   /\/politics(?:\/|$)/i,
   /\/national(?:\/|$)/i,
@@ -56,6 +70,7 @@ export function classifyFromUrl(sourceUrl: string): CategorySlug | null {
 
   if (matchesAnyPattern(url, SPORTS_URL_PATTERNS)) return "sports";
   if (matchesAnyPattern(url, TECH_URL_PATTERNS)) return "science-tech";
+  if (matchesAnyPattern(url, MARKETS_URL_PATTERNS)) return "markets";
   if (matchesAnyPattern(url, POLITICS_URL_PATTERNS)) return "politics";
 
   return null;
@@ -66,11 +81,13 @@ function classifyFromText(headline: string, summary: string): CategorySlug | nul
 
   const sports = SPORTS_KEYWORDS.test(text);
   const tech = TECH_KEYWORDS.test(text);
+  const markets = MARKETS_KEYWORDS.test(text);
   const politics = POLITICS_KEYWORDS.test(text);
 
-  if (sports && !tech) return "sports";
-  if (tech && !sports) return "science-tech";
-  if (politics && !sports && !tech) return "politics";
+  if (sports && !tech && !markets) return "sports";
+  if (tech && !sports && !markets) return "science-tech";
+  if (markets && !sports && !tech) return "markets";
+  if (politics && !sports && !tech && !markets) return "politics";
 
   return null;
 }

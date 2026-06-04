@@ -8,7 +8,7 @@ import type { NewsLanguage } from "@/lib/language";
 import { getUiCopy } from "@/lib/ui-copy";
 import {
   getCategoryLabel,
-  CATEGORY_SLUGS,
+  getCategorySlugs,
   type CategorySlug,
   type EditionResponse,
 } from "@/lib/types";
@@ -47,7 +47,7 @@ export function ArticleFeed({
     }
 
     const items: FeedItem[] = [];
-    for (const slug of CATEGORY_SLUGS) {
+    for (const slug of getCategorySlugs(language)) {
       const group = articles.filter((article) => article.category === slug);
       if (group.length === 0) continue;
       items.push({ type: "header", slug, count: group.length });
@@ -56,7 +56,7 @@ export function ArticleFeed({
       }
     }
     return items;
-  }, [activeCategory, articles]);
+  }, [activeCategory, articles, language]);
 
   const visibleItems = feedItems.slice(0, visibleCount);
   const containerClass =

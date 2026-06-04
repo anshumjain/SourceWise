@@ -1,6 +1,6 @@
 import { buildHomeHref, type NewsLanguage } from "@/lib/language";
 import { getUiCopy } from "@/lib/ui-copy";
-import { getCategoryLabel, CATEGORY_SLUGS, type CategorySlug } from "@/lib/types";
+import { getCategoryLabel, getCategorySlugs, type CategorySlug } from "@/lib/types";
 
 interface CategoryTabsProps {
   active: CategorySlug | "all";
@@ -15,9 +15,10 @@ export function CategoryTabs({
 }: CategoryTabsProps) {
   const allLabel = language === "hi" ? "सभी" : "All";
   const copy = getUiCopy(language);
+  const categorySlugs = getCategorySlugs(language);
   const tabs: Array<{ id: CategorySlug | "all"; label: string }> = [
     { id: "all", label: allLabel },
-    ...CATEGORY_SLUGS.map((slug) => ({
+    ...categorySlugs.map((slug) => ({
       id: slug,
       label: getCategoryLabel(slug, language),
     })),

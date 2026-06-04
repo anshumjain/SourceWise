@@ -21,11 +21,13 @@ export default async function Home({ searchParams }: HomeProps) {
   const language = parseLanguage(params.lang);
   const categoryParam = params.category;
   const activeCategory: CategorySlug | "all" =
-    categoryParam === "politics" ||
-    categoryParam === "sports" ||
-    categoryParam === "science-tech"
-      ? categoryParam
-      : "all";
+    language === "en" && categoryParam === "markets"
+      ? "markets"
+      : categoryParam === "politics" ||
+          categoryParam === "sports" ||
+          categoryParam === "science-tech"
+        ? categoryParam
+        : "all";
 
   let edition;
   try {

@@ -215,6 +215,15 @@ export function getVoteCopy(
       badAriaLabel: "Vote not interested",
     };
   }
+  if (category === "markets") {
+    return {
+      question: "Is this useful for your financial decisions?",
+      goodLabel: "Useful",
+      badLabel: "Not useful",
+      goodAriaLabel: "Vote useful for financial decisions",
+      badAriaLabel: "Vote not useful for financial decisions",
+    };
+  }
   return {
     question: "Is this good for the country?",
     goodLabel: "Good",

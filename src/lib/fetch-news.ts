@@ -5,7 +5,7 @@ import type { RawNewsItem, CategorySlug } from "./types";
 import { itemBelongsInCategory } from "./category-classifier";
 import { dedupeNewsItems, trimSummary } from "./news-utils";
 import { generateMockNews } from "./mock-news";
-import { CATEGORY_QUOTAS } from "./types";
+import { getCategoryQuotas, type CategorySlug } from "./types";
 
 const parser = new Parser({
   timeout: 15000,
@@ -103,6 +103,21 @@ export const RSS_SOURCES_EN: FeedSource[] = [
     name: "LiveMint Technology",
     url: "https://www.livemint.com/rss/technology",
     category: "science-tech",
+  },
+  {
+    name: "LiveMint Markets",
+    url: "https://www.livemint.com/rss/markets",
+    category: "markets",
+  },
+  {
+    name: "LiveMint Companies",
+    url: "https://www.livemint.com/rss/companies",
+    category: "markets",
+  },
+  {
+    name: "Indian Express Business",
+    url: "https://indianexpress.com/section/business/feed/",
+    category: "markets",
   },
 ];
 
@@ -226,6 +241,7 @@ async function fetchNewsApi(
     politics: "general",
     sports: "sports",
     "science-tech": "technology",
+    markets: "business",
   };
 
   const url = new URL("https://newsapi.org/v2/top-headlines");
@@ -278,9 +294,10 @@ function selectByQuota(
   const deduped = dedupeNewsItems(items);
   const selected: RawNewsItem[] = [];
 
-  for (const [category, quota] of Object.entries(CATEGORY_QUOTAS) as Array<
+  for (const [category, quota] of Object.entries(getCategoryQuotas(language)) as Array<
     [CategorySlug, number]
   >) {
+    if (quota === 0) continue;
     const categoryItems = deduped
       .filter((item) => item.category === category)
       .filter((item) =>
@@ -314,7 +331,7 @@ function selectByQuota(
   return selected;
 }
 
-/** Fetches up to 90 articles (50/20/20) for one language. */
+/** Fetches daily articles for one language (90 for Hindi, 110 for English). */
 export async function fetchDailyNews(
   language: NewsLanguage,
 ): Promise<RawNewsItem[]> {
@@ -326,17 +343,18 @@ export async function fetchDailyNews(
   const feedResults = await Promise.all(
     sources.map((source) => fetchFeed(source, language)),
   );
+  const apiCategories = Object.keys(getCategoryQuotas(language)).filter(
+    (category) => getCategoryQuotas(language)[category as CategorySlug] > 0,
+  ) as CategorySlug[];
   const apiResults = await Promise.all(
-    (["politics", "sports", "science-tech"] as CategorySlug[]).map((category) =>
-      fetchNewsApi(category, language),
-    ),
+    apiCategories.map((category) => fetchNewsApi(category, language)),
   );
 
   const combined = [...feedResults.flat(), ...apiResults.flat()];
   return selectByQuota(combined, language);
 }
 
-/** English + Hindi editions combined (180 articles). */
+/** English + Hindi editions combined (110 + 90 articles). */
 export async function fetchAllDailyNews(): Promise<RawNewsItem[]> {
   const [en, hi] = await Promise.all([
     fetchDailyNews("en"),

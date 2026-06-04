@@ -26,6 +26,14 @@ const SCIENCE_TEMPLATES = [
   "An institute in {place} completed trials for {topic} on {date}. Results include measured outcomes.",
 ];
 
+const MARKETS_TEMPLATES = [
+  "The {index} closed at {level} on {date}. Trading volume and sector movements were reported.",
+  "Regulators in {place} issued an update on {topic} on {date}. The notice lists compliance dates.",
+  "A listed company in {place} published {topic} on {date}. The filing includes revenue and margin figures.",
+  "Market participants in {place} recorded {event} on {date}. Exchange data shows price and volume changes.",
+  "An institution in {place} released {topic} on {date}. The report cites benchmark and sector performance.",
+];
+
 const PLACEHOLDERS: Record<string, string[]> = {
   body: ["Union government", "state cabinet", "election commission", "ministry"],
   action: ["a policy update", "a public hearing", "a regulatory order", "a briefing"],
@@ -44,6 +52,8 @@ const PLACEHOLDERS: Record<string, string[]> = {
   finding: ["a clinical observation", "a weather pattern study", "a materials test"],
   org: ["ISRO", "IIT Delhi", "a public research lab", "a telecom operator"],
   product: ["a satellite mission", "a mobile chipset", "a cloud service", "a health app"],
+  index: ["Nifty 50", "Sensex", "Nifty Bank", "Nifty IT"],
+  level: ["22,450", "73,820", "48,120", "19,980"],
 };
 
 function fillTemplate(template: string, index: number): string {
@@ -75,6 +85,7 @@ const HEADLINES_HI: Record<RawNewsItem["category"], string[]> = {
     "उत्पाद विनिर्देश उपयोगकर्ताओं के लिए जारी",
     "परीक्षण परिणाम दस्तावेज़ किए गए",
   ],
+  markets: [],
 };
 
 function buildMockItem(
@@ -110,6 +121,13 @@ function buildMockItem(
       `Product specifications released for ${place} users`,
       `Trial outcomes documented at ${place} facility`,
     ],
+    markets: [
+      `${place} market closes with sector-wide movement`,
+      `Exchange data published for ${place} session`,
+      `Listed company filing released in ${place}`,
+      `Regulatory update recorded for ${place} markets`,
+      `Benchmark performance noted for ${place} trading day`,
+    ],
   };
 
   const headlineList =
@@ -140,6 +158,11 @@ export function generateMockNews(language: NewsLanguage = "en"): RawNewsItem[] {
   }
   for (let i = 0; i < 20; i++) {
     items.push(buildMockItem("science-tech", i, SCIENCE_TEMPLATES, language));
+  }
+  if (language === "en") {
+    for (let i = 0; i < 20; i++) {
+      items.push(buildMockItem("markets", i, MARKETS_TEMPLATES, language));
+    }
   }
 
   return items;
