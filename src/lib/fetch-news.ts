@@ -6,12 +6,19 @@ import {
   type CategorySlug,
   type RawNewsItem,
 } from "./types";
-import { itemBelongsInCategory } from "./category-classifier";
+import {
+  itemBelongsInCategory,
+  itemStrictlyBelongsInCategory,
+} from "./category-classifier";
 import { dedupeNewsItems, trimSummary } from "./news-utils";
 import { generateMockNews } from "./mock-news";
+import { selectDiverseArticles } from "./source-mix";
+
+const FEED_BATCH_SIZE = 5;
+const FEED_TIMEOUT_MS = 20000;
 
 const parser = new Parser({
-  timeout: 15000,
+  timeout: FEED_TIMEOUT_MS,
   headers: {
     "User-Agent": "Sourcewise/1.0 (+https://sourcewise.in; news aggregator)",
   },
@@ -133,16 +140,6 @@ export const RSS_SOURCES_EN: FeedSource[] = [
     category: "markets",
   },
   {
-    name: "Moneycontrol Latest",
-    url: "https://www.moneycontrol.com/rss/latestnews.xml",
-    category: "markets",
-  },
-  {
-    name: "Moneycontrol Business",
-    url: "https://www.moneycontrol.com/rss/business.xml",
-    category: "markets",
-  },
-  {
     name: "The Hindu Business",
     url: "https://www.thehindu.com/business/Economy/?service=rss",
     category: "markets",
@@ -171,28 +168,8 @@ export const RSS_SOURCES_HI: FeedSource[] = [
     category: "politics",
   },
   {
-    name: "BBC Hindi India",
-    url: "https://feeds.bbci.co.uk/hindi/india/rss.xml",
-    category: "politics",
-  },
-  {
-    name: "Amar Ujala National",
-    url: "https://www.amarujala.com/rss/india-news.xml",
-    category: "politics",
-  },
-  {
-    name: "Amar Ujala India",
-    url: "https://www.amarujala.com/rss/national.xml",
-    category: "politics",
-  },
-  {
     name: "BBC Hindi Sport",
     url: "https://feeds.bbci.co.uk/hindi/sport/rss.xml",
-    category: "sports",
-  },
-  {
-    name: "Amar Ujala Sports",
-    url: "https://www.amarujala.com/rss/sports.xml",
     category: "sports",
   },
   {
@@ -201,18 +178,8 @@ export const RSS_SOURCES_HI: FeedSource[] = [
     category: "sports",
   },
   {
-    name: "Amar Ujala Tech",
-    url: "https://www.amarujala.com/rss/technology.xml",
-    category: "science-tech",
-  },
-  {
     name: "ABP Tech",
     url: "https://www.abplive.com/technology/feed",
-    category: "science-tech",
-  },
-  {
-    name: "Jagran Tech Hindi",
-    url: "https://tools.jagran.com/rss/jagranhindi/jagrantechhindinews.xml",
     category: "science-tech",
   },
 ];
@@ -222,6 +189,23 @@ export const RSS_SOURCES = RSS_SOURCES_EN;
 
 function sourcesForLanguage(language: NewsLanguage): FeedSource[] {
   return language === "hi" ? RSS_SOURCES_HI : RSS_SOURCES_EN;
+}
+
+async function fetchFeedsInBatches(
+  sources: FeedSource[],
+  language: NewsLanguage,
+): Promise<RawNewsItem[]> {
+  const results: RawNewsItem[] = [];
+
+  for (let index = 0; index < sources.length; index += FEED_BATCH_SIZE) {
+    const batch = sources.slice(index, index + FEED_BATCH_SIZE);
+    const batchResults = await Promise.all(
+      batch.map((source) => fetchFeed(source, language)),
+    );
+    results.push(...batchResults.flat());
+  }
+
+  return results;
 }
 
 async function fetchFeed(
@@ -256,7 +240,7 @@ async function fetchFeed(
           imageUrl: extractImageUrl(item),
         } satisfies RawNewsItem;
       })
-      .filter((item) => itemBelongsInCategory(item, source.category))
+      .filter((item) => itemStrictlyBelongsInCategory(item, source.category))
       .filter((item) =>
         textMatchesLanguage(item.headline, item.summary, language),
       );
@@ -315,7 +299,7 @@ async function fetchNewsApi(
           : new Date(),
         imageUrl: article.urlToImage,
       }))
-      .filter((item) => itemBelongsInCategory(item, category))
+      .filter((item) => itemStrictlyBelongsInCategory(item, category))
       .filter((item) =>
         textMatchesLanguage(item.headline, item.summary, language),
       );
@@ -336,13 +320,16 @@ function selectByQuota(
     [CategorySlug, number]
   >) {
     if (quota === 0) continue;
-    const categoryItems = deduped
-      .filter((item) => item.category === category)
-      .filter((item) =>
-        textMatchesLanguage(item.headline, item.summary, language),
-      )
-      .sort((a, b) => b.publishedAt.getTime() - a.publishedAt.getTime())
-      .slice(0, quota);
+    const categoryItems = selectDiverseArticles(
+      deduped
+        .filter((item) => item.category === category)
+        .filter((item) => itemStrictlyBelongsInCategory(item, category))
+        .filter((item) =>
+          textMatchesLanguage(item.headline, item.summary, language),
+        ),
+      quota,
+      category,
+    );
 
     if (categoryItems.length < quota) {
       if (process.env.USE_MOCK_NEWS === "true") {
@@ -369,7 +356,38 @@ function selectByQuota(
   return selected;
 }
 
-/** Fetches daily articles for one language (90 for Hindi, 120 for English). */
+/** Fetch and dedupe candidates for specific categories (used by phased cron). */
+export async function fetchNewsForCategories(
+  language: NewsLanguage,
+  categories: CategorySlug[],
+): Promise<RawNewsItem[]> {
+  if (process.env.USE_MOCK_NEWS === "true") {
+    return generateMockNews(language).filter((item) =>
+      categories.includes(item.category),
+    );
+  }
+
+  const categorySet = new Set(categories);
+  const sources = sourcesForLanguage(language).filter((source) =>
+    categorySet.has(source.category),
+  );
+  const feedResults = await fetchFeedsInBatches(sources, language);
+
+  const apiResults: RawNewsItem[] = [];
+  if (language === "en") {
+    for (const category of categories) {
+      if (getCategoryQuotas(language)[category] > 0) {
+        apiResults.push(...(await fetchNewsApi(category, language)));
+      }
+    }
+  }
+
+  return dedupeNewsItems([...feedResults, ...apiResults])
+    .filter((item) => categories.includes(item.category))
+    .filter((item) => itemStrictlyBelongsInCategory(item, item.category));
+}
+
+/** Fetches daily articles for one language (110 Hindi, 145 English). */
 export async function fetchDailyNews(
   language: NewsLanguage,
 ): Promise<RawNewsItem[]> {
@@ -378,25 +396,22 @@ export async function fetchDailyNews(
   }
 
   const sources = sourcesForLanguage(language);
-  const feedResults = await Promise.all(
-    sources.map((source) => fetchFeed(source, language)),
-  );
+  const feedResults = await fetchFeedsInBatches(sources, language);
   const apiCategories = Object.keys(getCategoryQuotas(language)).filter(
     (category) => getCategoryQuotas(language)[category as CategorySlug] > 0,
   ) as CategorySlug[];
-  const apiResults = await Promise.all(
-    apiCategories.map((category) => fetchNewsApi(category, language)),
-  );
+  const apiResults: RawNewsItem[] = [];
+  for (const category of apiCategories) {
+    apiResults.push(...(await fetchNewsApi(category, language)));
+  }
 
-  const combined = [...feedResults.flat(), ...apiResults.flat()];
+  const combined = [...feedResults, ...apiResults];
   return selectByQuota(combined, language);
 }
 
 /** English + Hindi editions combined (120 + 90 articles). */
 export async function fetchAllDailyNews(): Promise<RawNewsItem[]> {
-  const [en, hi] = await Promise.all([
-    fetchDailyNews("en"),
-    fetchDailyNews("hi"),
-  ]);
+  const en = await fetchDailyNews("en");
+  const hi = await fetchDailyNews("hi");
   return [...en, ...hi];
 }

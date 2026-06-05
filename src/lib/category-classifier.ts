@@ -123,6 +123,28 @@ export function itemBelongsInCategory(
   return categoryFitScore(item, category) >= 1;
 }
 
+/** Stricter gate for ingest — rejects URL/text signals that belong in another section. */
+export function itemStrictlyBelongsInCategory(
+  item: RawNewsItem,
+  category: CategorySlug,
+): boolean {
+  if (item.category !== category) return false;
+  if (!itemBelongsInCategory(item, category)) return false;
+
+  const urlCategory = classifyFromUrl(item.sourceUrl);
+  if (urlCategory && urlCategory !== category) return false;
+
+  const textCategory = classifyFromText(item.headline, item.summary);
+  if (textCategory && textCategory !== category) {
+    if (category === "politics" && !urlCategory) {
+      return categoryFitScore(item, category) >= 2;
+    }
+    return false;
+  }
+
+  return true;
+}
+
 export function pickBetterCategoryItem(
   existing: RawNewsItem,
   candidate: RawNewsItem,

@@ -1,8 +1,11 @@
 import {
   itemBelongsInCategory,
+  itemStrictlyBelongsInCategory,
   pickBetterCategoryItem,
 } from "./category-classifier";
 import type { RawNewsItem } from "./types";
+import { prismaCategoryToSlug } from "./types";
+import type { Article } from "@prisma/client";
 
 const OPINION_KEYWORDS = [
   "opinion",
@@ -93,7 +96,7 @@ function shingleSet(tokens: string[], size = 3): Set<string> {
   return shingles;
 }
 
-function titleSimilarity(a: string, b: string): number {
+export function titleSimilarity(a: string, b: string): number {
   const tokensA = normalizeTitle(a);
   const tokensB = normalizeTitle(b);
 
@@ -135,6 +138,45 @@ export function dedupeNewsItems(items: RawNewsItem[]): RawNewsItem[] {
   }
 
   return result;
+}
+
+export function articleToRawNewsItem(article: Article): RawNewsItem {
+  return {
+    language: article.language as RawNewsItem["language"],
+    category: prismaCategoryToSlug(article.category),
+    headline: article.headline,
+    summary: article.summary,
+    sourceUrl: article.sourceUrl,
+    sourceName: article.sourceName,
+    publishedAt: article.publishedAt,
+    videoUrl: article.videoUrl ?? undefined,
+    imageUrl: article.imageUrl,
+  };
+}
+
+export function isDuplicateOfExisting(
+  item: RawNewsItem,
+  existing: RawNewsItem[],
+): boolean {
+  const normalized = normalizeUrl(item.sourceUrl);
+  for (const prior of existing) {
+    if (normalizeUrl(prior.sourceUrl) === normalized) return true;
+    if (titleSimilarity(prior.headline, item.headline) > 0.72) return true;
+  }
+  return false;
+}
+
+/** Dedupe new candidates against the edition and enforce strict category placement. */
+export function filterNewCandidates(
+  candidates: RawNewsItem[],
+  existing: RawNewsItem[],
+): RawNewsItem[] {
+  const deduped = dedupeNewsItems(candidates);
+  return deduped.filter(
+    (item) =>
+      itemStrictlyBelongsInCategory(item, item.category) &&
+      !isDuplicateOfExisting(item, existing),
+  );
 }
 
 function decodeHtmlEntities(text: string): string {

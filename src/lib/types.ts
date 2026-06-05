@@ -31,12 +31,12 @@ const CATEGORY_QUOTAS_BASE: Record<
   Exclude<CategorySlug, "markets">,
   number
 > = {
-  politics: 50,
-  sports: 20,
-  "science-tech": 20,
+  politics: 60,
+  sports: 25,
+  "science-tech": 25,
 };
 
-const MARKETS_QUOTA_EN = 30;
+const MARKETS_QUOTA_EN = 35;
 
 /** @deprecated Use getCategoryQuotas(language) */
 export const CATEGORY_QUOTAS: Record<CategorySlug, number> = {

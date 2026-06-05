@@ -1,41 +1,16 @@
 import { prisma } from "./db";
-import { fetchAllDailyNews } from "./fetch-news";
+import { publishDailyEditionPhased, runCronPhase } from "./edition-publish";
+import type { CronPhase } from "./cron-phases";
 import type { NewsLanguage } from "./language";
 import { textMatchesLanguage } from "./language-detect";
-import { getIstDateString } from "./ist";
-import { slugToPrismaCategory } from "./types";
 
-/** Publishes today's edition at 9 AM IST. Wipes all prior editions, articles, and votes. */
+/** Publishes today's edition via phased pipeline (all categories, both languages). */
 export async function publishDailyEdition(dateString?: string) {
-  const date = dateString ?? getIstDateString();
-  const items = await fetchAllDailyNews();
-
-  await prisma.vote.deleteMany({});
-  await prisma.article.deleteMany({});
-  await prisma.edition.deleteMany({});
-
-  const edition = await prisma.edition.create({
-    data: {
-      date,
-      articles: {
-        create: items.map((item) => ({
-          language: item.language,
-          category: slugToPrismaCategory(item.category),
-          headline: item.headline,
-          summary: item.summary,
-          sourceUrl: item.sourceUrl,
-          sourceName: item.sourceName,
-          publishedAt: item.publishedAt,
-          videoUrl: item.videoUrl ?? null,
-          imageUrl: item.imageUrl ?? null,
-        })),
-      },
-    },
-    include: { articles: true },
-  });
-
-  return edition;
+  return publishDailyEditionPhased(dateString);
 }
+
+export { runCronPhase };
+export type { CronPhase };
 
 export async function getCurrentEdition(language?: NewsLanguage) {
   const edition = await prisma.edition.findFirst({
