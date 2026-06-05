@@ -36,7 +36,7 @@ const CATEGORY_QUOTAS_BASE: Record<
   "science-tech": 20,
 };
 
-const MARKETS_QUOTA_EN = 20;
+const MARKETS_QUOTA_EN = 30;
 
 /** @deprecated Use getCategoryQuotas(language) */
 export const CATEGORY_QUOTAS: Record<CategorySlug, number> = {

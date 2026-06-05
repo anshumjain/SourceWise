@@ -34,6 +34,10 @@ const MARKETS_URL_PATTERNS = [
   /moneycontrol\.com/i,
   /economictimes\.indiatimes\.com\/markets/i,
   /livemint\.com\/market/i,
+  /thehindubusinessline\.com\/markets/i,
+  /thehindu\.com\/business/i,
+  /moneycontrol\.com/i,
+  /ndtvprofit/i,
 ];
 
 const MARKETS_KEYWORDS =

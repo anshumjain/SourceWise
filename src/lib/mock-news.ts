@@ -160,7 +160,7 @@ export function generateMockNews(language: NewsLanguage = "en"): RawNewsItem[] {
     items.push(buildMockItem("science-tech", i, SCIENCE_TEMPLATES, language));
   }
   if (language === "en") {
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < 30; i++) {
       items.push(buildMockItem("markets", i, MARKETS_TEMPLATES, language));
     }
   }

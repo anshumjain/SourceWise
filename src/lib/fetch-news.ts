@@ -122,6 +122,41 @@ export const RSS_SOURCES_EN: FeedSource[] = [
     url: "https://indianexpress.com/section/business/feed/",
     category: "markets",
   },
+  {
+    name: "Economic Times Markets",
+    url: "https://economictimes.indiatimes.com/markets/rssfeeds/1977021501.cms",
+    category: "markets",
+  },
+  {
+    name: "Economic Times Stocks",
+    url: "https://economictimes.indiatimes.com/markets/stocks/rssfeeds/2146842.cms",
+    category: "markets",
+  },
+  {
+    name: "Moneycontrol Latest",
+    url: "https://www.moneycontrol.com/rss/latestnews.xml",
+    category: "markets",
+  },
+  {
+    name: "Moneycontrol Business",
+    url: "https://www.moneycontrol.com/rss/business.xml",
+    category: "markets",
+  },
+  {
+    name: "The Hindu Business",
+    url: "https://www.thehindu.com/business/Economy/?service=rss",
+    category: "markets",
+  },
+  {
+    name: "Business Line Markets",
+    url: "https://www.thehindubusinessline.com/markets/?service=rss",
+    category: "markets",
+  },
+  {
+    name: "NDTV Profit",
+    url: "https://feeds.feedburner.com/ndtvprofit-latest",
+    category: "markets",
+  },
 ];
 
 export const RSS_SOURCES_HI: FeedSource[] = [
@@ -334,7 +369,7 @@ function selectByQuota(
   return selected;
 }
 
-/** Fetches daily articles for one language (90 for Hindi, 110 for English). */
+/** Fetches daily articles for one language (90 for Hindi, 120 for English). */
 export async function fetchDailyNews(
   language: NewsLanguage,
 ): Promise<RawNewsItem[]> {
@@ -357,7 +392,7 @@ export async function fetchDailyNews(
   return selectByQuota(combined, language);
 }
 
-/** English + Hindi editions combined (110 + 90 articles). */
+/** English + Hindi editions combined (120 + 90 articles). */
 export async function fetchAllDailyNews(): Promise<RawNewsItem[]> {
   const [en, hi] = await Promise.all([
     fetchDailyNews("en"),
