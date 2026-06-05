@@ -8,6 +8,7 @@ import {
 } from "./types";
 import {
   itemBelongsInCategory,
+  itemMatchesFeedSource,
   itemStrictlyBelongsInCategory,
 } from "./category-classifier";
 import { dedupeNewsItems, trimSummary } from "./news-utils";
@@ -240,7 +241,7 @@ async function fetchFeed(
           imageUrl: extractImageUrl(item),
         } satisfies RawNewsItem;
       })
-      .filter((item) => itemStrictlyBelongsInCategory(item, source.category))
+      .filter((item) => itemMatchesFeedSource(item, source.category))
       .filter((item) =>
         textMatchesLanguage(item.headline, item.summary, language),
       );
@@ -323,7 +324,11 @@ function selectByQuota(
     const categoryItems = selectDiverseArticles(
       deduped
         .filter((item) => item.category === category)
-        .filter((item) => itemStrictlyBelongsInCategory(item, category))
+        .filter((item) =>
+          category === "politics"
+            ? itemStrictlyBelongsInCategory(item, category)
+            : itemBelongsInCategory(item, category),
+        )
         .filter((item) =>
           textMatchesLanguage(item.headline, item.summary, language),
         ),
@@ -382,9 +387,9 @@ export async function fetchNewsForCategories(
     }
   }
 
-  return dedupeNewsItems([...feedResults, ...apiResults])
-    .filter((item) => categories.includes(item.category))
-    .filter((item) => itemStrictlyBelongsInCategory(item, item.category));
+  return dedupeNewsItems([...feedResults, ...apiResults]).filter((item) =>
+    categories.includes(item.category),
+  );
 }
 
 /** Fetches daily articles for one language (110 Hindi, 145 English). */

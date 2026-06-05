@@ -1,6 +1,5 @@
 import {
   itemBelongsInCategory,
-  itemStrictlyBelongsInCategory,
   pickBetterCategoryItem,
 } from "./category-classifier";
 import type { RawNewsItem } from "./types";
@@ -161,12 +160,17 @@ export function isDuplicateOfExisting(
   const normalized = normalizeUrl(item.sourceUrl);
   for (const prior of existing) {
     if (normalizeUrl(prior.sourceUrl) === normalized) return true;
-    if (titleSimilarity(prior.headline, item.headline) > 0.72) return true;
+    if (
+      prior.category === item.category &&
+      titleSimilarity(prior.headline, item.headline) > 0.72
+    ) {
+      return true;
+    }
   }
   return false;
 }
 
-/** Dedupe new candidates against the edition and enforce strict category placement. */
+/** Dedupe new candidates against the edition (feeds already category-filtered). */
 export function filterNewCandidates(
   candidates: RawNewsItem[],
   existing: RawNewsItem[],
@@ -174,7 +178,7 @@ export function filterNewCandidates(
   const deduped = dedupeNewsItems(candidates);
   return deduped.filter(
     (item) =>
-      itemStrictlyBelongsInCategory(item, item.category) &&
+      itemBelongsInCategory(item, item.category) &&
       !isDuplicateOfExisting(item, existing),
   );
 }

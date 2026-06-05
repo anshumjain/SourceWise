@@ -10,6 +10,7 @@ const SPORTS_URL_PATTERNS = [
   /\/sports-news(?:\/|$)/i,
   /\/sports-news-hindi(?:\/|$)/i,
   /espncricinfo\.com/i,
+  /sportstar\.thehindu\.com/i,
   /sportsjagran\.com/i,
   /\/ipl(?:\/|$)/i,
 ];
@@ -143,6 +144,34 @@ export function itemStrictlyBelongsInCategory(
   }
 
   return true;
+}
+
+/**
+ * Dedicated RSS feeds (sports, tech, markets): trust the feed label unless the
+ * article URL clearly belongs in another section. Avoids dropping valid sports/tech
+ * stories that mention politics or business in the headline.
+ */
+export function itemMatchesDedicatedFeed(
+  item: RawNewsItem,
+  feedCategory: CategorySlug,
+): boolean {
+  if (item.category !== feedCategory) return false;
+  if (!itemBelongsInCategory(item, feedCategory)) return false;
+
+  const urlCategory = classifyFromUrl(item.sourceUrl);
+  if (urlCategory && urlCategory !== feedCategory) return false;
+
+  return true;
+}
+
+export function itemMatchesFeedSource(
+  item: RawNewsItem,
+  feedCategory: CategorySlug,
+): boolean {
+  if (feedCategory === "politics") {
+    return itemStrictlyBelongsInCategory(item, feedCategory);
+  }
+  return itemMatchesDedicatedFeed(item, feedCategory);
 }
 
 export function pickBetterCategoryItem(

@@ -2,7 +2,9 @@ import { prisma } from "./db";
 import {
   CRON_PHASE_CONFIG,
   CRON_PHASE_ORDER,
+  resolveCronPhase,
   type CronPhase,
+  type LegacyCronPhase,
 } from "./cron-phases";
 import { fetchNewsForCategories } from "./fetch-news";
 import type { NewsLanguage } from "./language";
@@ -118,7 +120,20 @@ async function fetchAndSelectBatch(
 ): Promise<RawNewsItem[]> {
   const fetched = await fetchNewsForCategories(language, categories);
   const novel = filterNewCandidates(fetched, existing);
-  return selectForRemainingQuota(novel, existing, language, categories);
+  const selected = selectForRemainingQuota(
+    novel,
+    existing,
+    language,
+    categories,
+  );
+
+  if (selected.length === 0 && fetched.length > 0) {
+    console.warn(
+      `[${language}] ${categories.join(",")}: ${fetched.length} fetched, ${novel.length} after dedupe, 0 selected for quota`,
+    );
+  }
+
+  return selected;
 }
 
 export async function appendCategoryBatch(
@@ -176,12 +191,11 @@ async function startDailyEdition(
 }
 
 export async function runCronPhase(
-  phase: CronPhase | "init",
+  phase: CronPhase | LegacyCronPhase,
   dateString?: string,
 ) {
   const date = dateString ?? getIstDateString();
-  const resolvedPhase: CronPhase =
-    phase === "init" ? "en-politics-markets" : phase;
+  const resolvedPhase = resolveCronPhase(phase);
   const config = CRON_PHASE_CONFIG[resolvedPhase];
 
   const existing = await getEditionForDate(date);
