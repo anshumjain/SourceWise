@@ -96,8 +96,8 @@ export function ArticleCard({
   );
 
   return (
-    <article className="group overflow-hidden rounded-2xl border border-stone-200/80 bg-white shadow-sm shadow-stone-200/50 transition hover:border-stone-300 hover:shadow-md hover:shadow-stone-200/60 dark:border-stone-800 dark:bg-stone-950/60 dark:shadow-none dark:hover:border-stone-700">
-      <div className="flex flex-col">
+    <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-stone-200/80 bg-white shadow-sm shadow-stone-200/50 transition hover:border-stone-300 hover:shadow-md hover:shadow-stone-200/60 dark:border-stone-800 dark:bg-stone-950/60 dark:shadow-none dark:hover:border-stone-700">
+      <div className="flex h-full flex-col">
         {imageTrigger}
 
         <div className="flex flex-1 flex-col p-5">
@@ -131,54 +131,60 @@ export function ArticleCard({
             </div>
           </div>
 
-          <h2 className="font-serif text-lg font-semibold leading-snug text-stone-900 dark:text-stone-50">
+          <h2
+            className={`font-serif text-lg font-semibold leading-snug text-stone-900 dark:text-stone-50 ${expanded ? "" : "line-clamp-3"}`}
+          >
             {headlineContent}
           </h2>
 
-          <p className="mt-3 text-sm leading-relaxed text-stone-600 dark:text-stone-300">
+          <p
+            className={`mt-3 text-sm leading-relaxed text-stone-600 dark:text-stone-300 ${expanded ? "" : "line-clamp-4 flex-1"}`}
+          >
             {summaryPreview}
           </p>
 
-          <div className="mt-4 flex flex-wrap items-center gap-3">
-            <a
-              href={article.sourceUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 rounded-full bg-stone-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-stone-800 dark:bg-stone-50 dark:text-stone-900 dark:hover:bg-stone-200"
-            >
-              {ui.readAtSource(article.sourceName)}
-              <span aria-hidden="true">→</span>
-            </a>
-            {article.videoUrl && (
+          <div className={`mt-4 ${expanded ? "" : "shrink-0"}`}>
+            <div className="flex flex-wrap items-center gap-3">
               <a
-                href={article.videoUrl}
+                href={article.sourceUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-sm text-stone-500 hover:text-stone-800 dark:text-stone-400 dark:hover:text-stone-200"
+                className="inline-flex items-center gap-1.5 rounded-full bg-stone-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-stone-800 dark:bg-stone-50 dark:text-stone-900 dark:hover:bg-stone-200"
               >
-                {ui.relatedVideo}
+                {ui.readAtSource(article.sourceName)}
+                <span aria-hidden="true">→</span>
               </a>
-            )}
-          </div>
-
-          {expanded && (
-            <div className="mt-4">
-              <ShareButton
-                title={article.headline}
-                url={shareUrl}
-                language={language}
-              />
+              {article.videoUrl && (
+                <a
+                  href={article.videoUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-stone-500 hover:text-stone-800 dark:text-stone-400 dark:hover:text-stone-200"
+                >
+                  {ui.relatedVideo}
+                </a>
+              )}
             </div>
-          )}
 
-          <SentimentBar
-            articleId={article.id}
-            editionDate={editionDate}
-            initialGoodVotes={article.goodVotes}
-            initialBadVotes={article.badVotes}
-            category={article.category}
-            language={language}
-          />
+            {expanded && (
+              <div className="mt-4">
+                <ShareButton
+                  title={article.headline}
+                  url={shareUrl}
+                  language={language}
+                />
+              </div>
+            )}
+
+            <SentimentBar
+              articleId={article.id}
+              editionDate={editionDate}
+              initialGoodVotes={article.goodVotes}
+              initialBadVotes={article.badVotes}
+              category={article.category}
+              language={language}
+            />
+          </div>
         </div>
       </div>
     </article>

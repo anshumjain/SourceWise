@@ -52,7 +52,7 @@ export function ArticleFeed({
 
   return (
     <>
-      <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid auto-rows-fr gap-5 md:grid-cols-2 xl:grid-cols-3">
         {visibleArticles.map((article) => (
           <ArticleCard
             key={article.id}
