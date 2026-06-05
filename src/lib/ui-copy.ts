@@ -52,6 +52,7 @@ export interface UiCopy {
   votesCount: (count: number) => string;
   readerVotes: (count: number) => string;
   readAtSource: (sourceName: string) => string;
+  summaryFallback: string;
   relatedVideo: string;
   share: string;
   toast: { linkCopied: string; copyFailed: string };
@@ -104,6 +105,7 @@ const EN: UiCopy = {
   readerVotes: (count) =>
     `${count} reader ${count === 1 ? "vote" : "votes"}`,
   readAtSource: (source) => `Read at ${source}`,
+  summaryFallback: "Open the source link below for the full report.",
   relatedVideo: "Related video",
   share: "Share",
   toast: { linkCopied: "Link copied", copyFailed: "Could not copy link" },
@@ -156,6 +158,7 @@ const HI: UiCopy = {
   votesCount: (count) => `${count} वोट`,
   readerVotes: (count) => `${count} पाठक वोट`,
   readAtSource: (source) => `${source} पर पढ़ें`,
+  summaryFallback: "पूरी खबर के लिए नीचे स्रोत लिंक खोलें।",
   relatedVideo: "संबंधित वीडियो",
   share: "साझा करें",
   toast: { linkCopied: "लिंक कॉपी हो गया", copyFailed: "लिंक कॉपी नहीं हो सका" },

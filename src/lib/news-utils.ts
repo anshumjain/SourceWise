@@ -209,6 +209,42 @@ export function stripHtmlToText(html: string): string {
     .trim();
 }
 
+const JUNK_SUMMARY_PATTERNS = [
+  /choose your reason below/i,
+  /click on the report button/i,
+  /alert our moderators/i,
+  /your reason has been reported/i,
+  /reported to the admin/i,
+  /please refresh the page or try again/i,
+  /sign in to read/i,
+  /subscribe (?:now )?to read/i,
+  /this (?:content|article) is (?:free|available) for premium/i,
+  /add (?:as )?my\s*['']?s\s*['']?standard/i,
+  /^\s*read more\s*$/i,
+  /^\s*comments?\s*\(\d+\)\s*$/i,
+  /^\s*share this (?:article|story)\s*$/i,
+  /^\s*follow us on/i,
+  /cookie(?:s)? (?:policy|settings)/i,
+];
+
+export function isJunkSummary(text: string, headline = ""): boolean {
+  const cleaned = sanitizeSummary(text);
+  if (!cleaned) return true;
+
+  const words = cleaned.split(/\s+/).filter(Boolean);
+  if (words.length < 8) return true;
+
+  if (JUNK_SUMMARY_PATTERNS.some((pattern) => pattern.test(cleaned))) {
+    return true;
+  }
+
+  if (headline && titleSimilarity(cleaned, headline) > 0.88) {
+    return true;
+  }
+
+  return false;
+}
+
 export function sanitizeSummary(text: string, fallback = ""): string {
   const cleaned = stripHtmlToText(text);
   return cleaned || stripHtmlToText(fallback);
@@ -221,4 +257,74 @@ export function trimSummary(text: string, maxWords = 100): string {
   const words = cleaned.split(" ");
   if (words.length <= maxWords) return words.join(" ");
   return `${words.slice(0, maxWords).join(" ")}…`;
+}
+
+function extractParagraphCandidates(html: string): string[] {
+  const paragraphs = [...html.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi)]
+    .map((match) => sanitizeSummary(match[1]))
+    .filter((text) => text.length > 40);
+
+  return paragraphs;
+}
+
+/** Pick the best non-boilerplate summary from RSS fields and HTML content. */
+export function buildArticleSummary(
+  candidates: string[],
+  headline: string,
+  maxWords = 100,
+): string {
+  for (const raw of candidates) {
+    if (!raw?.trim()) continue;
+    const trimmed = trimSummary(raw, maxWords);
+    if (trimmed && !isJunkSummary(trimmed, headline)) {
+      return trimmed;
+    }
+  }
+
+  return "";
+}
+
+export function resolveDisplaySummary(
+  summary: string,
+  headline: string,
+  fallback = "Open the source link below for the full report.",
+): string {
+  const cleaned = sanitizeSummary(summary, headline);
+  if (cleaned && !isJunkSummary(cleaned, headline)) {
+    return cleaned;
+  }
+  return fallback;
+}
+
+export function rssSummaryCandidates(item: {
+  contentSnippet?: string;
+  content?: string;
+  summary?: string;
+  description?: string;
+}): string[] {
+  const seen = new Set<string>();
+  const ordered: string[] = [];
+
+  const push = (value?: string) => {
+    const trimmed = value?.trim();
+    if (!trimmed || seen.has(trimmed)) return;
+    seen.add(trimmed);
+    ordered.push(trimmed);
+  };
+
+  if (item.content) {
+    for (const paragraph of extractParagraphCandidates(item.content)) {
+      push(paragraph);
+    }
+  }
+
+  push(item.description);
+  push(item.summary);
+  push(item.contentSnippet);
+
+  if (item.content) {
+    push(sanitizeSummary(item.content));
+  }
+
+  return ordered;
 }

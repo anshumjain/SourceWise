@@ -11,7 +11,12 @@ import {
   itemMatchesFeedSource,
   itemStrictlyBelongsInCategory,
 } from "./category-classifier";
-import { dedupeNewsItems, trimSummary } from "./news-utils";
+import {
+  buildArticleSummary,
+  dedupeNewsItems,
+  rssSummaryCandidates,
+  trimSummary,
+} from "./news-utils";
 import { generateMockNews } from "./mock-news";
 import { selectDiverseArticles } from "./source-mix";
 
@@ -217,7 +222,6 @@ async function fetchFeed(
     const feed = await parser.parseURL(source.url);
     return (feed.items ?? [])
       .map((item) => {
-        const content = item.contentSnippet || item.content || item.summary || "";
         const publishedAt = item.isoDate ? new Date(item.isoDate) : new Date();
         const enclosure = item.enclosure?.url;
         const videoUrl =
@@ -226,8 +230,17 @@ async function fetchFeed(
             : undefined;
 
         const headline = (item.title ?? "Untitled").trim();
+        const extended = item as Parser.Item & { description?: string };
         const summary =
-          trimSummary(content || headline) || trimSummary(headline);
+          buildArticleSummary(
+            rssSummaryCandidates({
+              contentSnippet: item.contentSnippet,
+              content: item.content,
+              summary: item.summary,
+              description: extended.description,
+            }),
+            headline,
+          ) || trimSummary(headline);
 
         return {
           language,
@@ -292,7 +305,13 @@ async function fetchNewsApi(
         language: "en" as const,
         category,
         headline: (article.title ?? "Untitled").trim(),
-        summary: trimSummary(article.description || article.title || ""),
+        summary:
+          buildArticleSummary(
+            [article.description, article.title].filter(
+              (value): value is string => Boolean(value?.trim()),
+            ),
+            (article.title ?? "Untitled").trim(),
+          ) || trimSummary(article.title || ""),
         sourceUrl: article.url ?? "https://newsapi.org",
         sourceName: article.source?.name ?? "NewsAPI",
         publishedAt: article.publishedAt

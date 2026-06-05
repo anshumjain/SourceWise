@@ -1,6 +1,7 @@
 import type { NewsLanguage } from "./language";
 import { textMatchesLanguage } from "./language-detect";
-import { sanitizeSummary } from "./news-utils";
+import { resolveDisplaySummary } from "./news-utils";
+import { getUiCopy } from "./ui-copy";
 import {
   getCategoryLabel,
   prismaCategoryToSlug,
@@ -13,6 +14,8 @@ export function buildEditionResponse(
   edition: Edition & { articles: Article[] },
   language: NewsLanguage = "en",
 ): EditionResponse {
+  const copy = getUiCopy(language);
+
   return {
     date: edition.date,
     formattedDate: "",
@@ -34,7 +37,11 @@ export function buildEditionResponse(
       return {
         id: article.id,
         headline: article.headline,
-        summary: sanitizeSummary(article.summary, article.headline),
+        summary: resolveDisplaySummary(
+          article.summary,
+          article.headline,
+          copy.summaryFallback,
+        ),
         category,
         categoryLabel: getCategoryLabel(category, language),
         sourceUrl: article.sourceUrl,

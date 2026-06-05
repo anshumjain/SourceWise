@@ -16,6 +16,15 @@ function stripTags(html: string): string {
   return decodeHtmlEntities(html.replace(/<[^>]+>/g, " "));
 }
 
+function isReaderJunkParagraph(text: string): boolean {
+  return (
+    /choose your reason below/i.test(text) ||
+    /click on the report button/i.test(text) ||
+    /alert our moderators/i.test(text) ||
+    /your reason has been reported/i.test(text)
+  );
+}
+
 export function extractArticleText(html: string): string {
   const withoutScripts = html
     .replace(/<script[\s\S]*?<\/script>/gi, " ")
@@ -29,7 +38,7 @@ export function extractArticleText(html: string): string {
 
   const paragraphs = [...scope.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi)]
     .map((match) => stripTags(match[1]).replace(/\s+/g, " ").trim())
-    .filter((text) => text.length > 40);
+    .filter((text) => text.length > 40 && !isReaderJunkParagraph(text));
 
   if (paragraphs.length >= 2) {
     return paragraphs.join("\n\n");
