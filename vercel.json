@@ -3,24 +3,20 @@
   "buildCommand": "npm run build",
   "crons": [
     {
-      "path": "/api/cron/daily-edition?phase=init",
-      "schedule": "28 3 * * *"
-    },
-    {
       "path": "/api/cron/daily-edition?phase=en-politics-markets",
-      "schedule": "31 3 * * *"
+      "schedule": "30 3 * * *"
     },
     {
       "path": "/api/cron/daily-edition?phase=en-sports-tech",
-      "schedule": "34 3 * * *"
+      "schedule": "33 3 * * *"
     },
     {
       "path": "/api/cron/daily-edition?phase=hi-politics",
-      "schedule": "37 3 * * *"
+      "schedule": "36 3 * * *"
     },
     {
       "path": "/api/cron/daily-edition?phase=hi-sports-tech",
-      "schedule": "40 3 * * *"
+      "schedule": "39 3 * * *"
     }
   ]
 }

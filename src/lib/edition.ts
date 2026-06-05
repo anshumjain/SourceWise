@@ -1,6 +1,6 @@
 import { prisma } from "./db";
 import { publishDailyEditionPhased, runCronPhase } from "./edition-publish";
-import type { CronPhase } from "./cron-phases";
+import type { CronPhase, LegacyCronPhase } from "./cron-phases";
 import type { NewsLanguage } from "./language";
 import { textMatchesLanguage } from "./language-detect";
 
@@ -10,7 +10,7 @@ export async function publishDailyEdition(dateString?: string) {
 }
 
 export { runCronPhase };
-export type { CronPhase };
+export type { CronPhase, LegacyCronPhase };
 
 export async function getCurrentEdition(language?: NewsLanguage) {
   const edition = await prisma.edition.findFirst({

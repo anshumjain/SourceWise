@@ -22,22 +22,40 @@ import {
   type RawNewsItem,
 } from "./types";
 
-export async function initializeDailyEdition(dateString?: string) {
-  const date = dateString ?? getIstDateString();
-
-  await prisma.vote.deleteMany({});
-  await prisma.article.deleteMany({});
-  await prisma.edition.deleteMany({});
-
-  return prisma.edition.create({
-    data: { date },
-    include: { articles: true },
-  });
+function articleCreateInput(item: RawNewsItem) {
+  return {
+    language: item.language,
+    category: slugToPrismaCategory(item.category),
+    headline: item.headline,
+    summary: item.summary,
+    sourceUrl: item.sourceUrl,
+    sourceName: item.sourceName,
+    publishedAt: item.publishedAt,
+    videoUrl: item.videoUrl ?? null,
+    imageUrl: item.imageUrl ?? null,
+  };
 }
 
 async function getEditionForDate(date: string) {
   return prisma.edition.findUnique({
     where: { date },
+    include: { articles: true },
+  });
+}
+
+/** Wipe prior editions and create today's edition with articles in one step. */
+async function replaceDailyEdition(date: string, items: RawNewsItem[]) {
+  await prisma.vote.deleteMany({});
+  await prisma.article.deleteMany({});
+  await prisma.edition.deleteMany({});
+
+  return prisma.edition.create({
+    data: {
+      date,
+      articles: {
+        create: items.map(articleCreateInput),
+      },
+    },
     include: { articles: true },
   });
 }
@@ -93,6 +111,16 @@ function selectForRemainingQuota(
   return selected;
 }
 
+async function fetchAndSelectBatch(
+  existing: RawNewsItem[],
+  language: NewsLanguage,
+  categories: CategorySlug[],
+): Promise<RawNewsItem[]> {
+  const fetched = await fetchNewsForCategories(language, categories);
+  const novel = filterNewCandidates(fetched, existing);
+  return selectForRemainingQuota(novel, existing, language, categories);
+}
+
 export async function appendCategoryBatch(
   date: string,
   language: NewsLanguage,
@@ -100,18 +128,13 @@ export async function appendCategoryBatch(
 ) {
   const edition = await getEditionForDate(date);
   if (!edition) {
-    throw new Error(`Edition for ${date} not found — run init phase first`);
+    throw new Error(
+      `Edition for ${date} not found — run en-politics-markets phase first`,
+    );
   }
 
   const existing = edition.articles.map(articleToRawNewsItem);
-  const fetched = await fetchNewsForCategories(language, categories);
-  const novel = filterNewCandidates(fetched, existing);
-  const toInsert = selectForRemainingQuota(
-    novel,
-    existing,
-    language,
-    categories,
-  );
+  const toInsert = await fetchAndSelectBatch(existing, language, categories);
 
   if (toInsert.length === 0) {
     return { edition, added: 0, categories };
@@ -120,15 +143,7 @@ export async function appendCategoryBatch(
   await prisma.article.createMany({
     data: toInsert.map((item) => ({
       editionId: edition.id,
-      language: item.language,
-      category: slugToPrismaCategory(item.category),
-      headline: item.headline,
-      summary: item.summary,
-      sourceUrl: item.sourceUrl,
-      sourceName: item.sourceName,
-      publishedAt: item.publishedAt,
-      videoUrl: item.videoUrl ?? null,
-      imageUrl: item.imageUrl ?? null,
+      ...articleCreateInput(item),
     })),
   });
 
@@ -140,27 +155,44 @@ export async function appendCategoryBatch(
   };
 }
 
-export async function runCronPhase(phase: CronPhase, dateString?: string) {
+/** First phase of the day: fetch content, then wipe and insert atomically. */
+async function startDailyEdition(
+  date: string,
+  language: NewsLanguage,
+  categories: CategorySlug[],
+) {
+  const toInsert = await fetchAndSelectBatch([], language, categories);
+
+  if (toInsert.length === 0) {
+    console.error(
+      `[${date}] startDailyEdition: 0 articles selected for ${language} ${categories.join(",")}`,
+    );
+    const edition = await replaceDailyEdition(date, []);
+    return { edition, added: 0, categories };
+  }
+
+  const edition = await replaceDailyEdition(date, toInsert);
+  return { edition, added: toInsert.length, categories };
+}
+
+export async function runCronPhase(
+  phase: CronPhase | "init",
+  dateString?: string,
+) {
   const date = dateString ?? getIstDateString();
-  const config = CRON_PHASE_CONFIG[phase];
+  const resolvedPhase: CronPhase =
+    phase === "init" ? "en-politics-markets" : phase;
+  const config = CRON_PHASE_CONFIG[resolvedPhase];
 
-  if (phase === "init") {
-    const edition = await initializeDailyEdition(date);
-    return { phase, date, articleCount: edition.articles.length, added: 0 };
-  }
+  const existing = await getEditionForDate(date);
 
-  if (!config.language) {
-    throw new Error(`Phase ${phase} is missing language configuration`);
-  }
-
-  const result = await appendCategoryBatch(
-    date,
-    config.language,
-    config.categories,
-  );
+  const result =
+    config.resetsEdition && !existing
+      ? await startDailyEdition(date, config.language, config.categories)
+      : await appendCategoryBatch(date, config.language, config.categories);
 
   return {
-    phase,
+    phase: resolvedPhase,
     date,
     articleCount: result.edition.articles.length,
     added: result.added,
@@ -168,18 +200,26 @@ export async function runCronPhase(phase: CronPhase, dateString?: string) {
   };
 }
 
-/** Runs every phase sequentially — useful for local scripts and manual full publish. */
+/** Local / full publish: fetch all batches before any wipe so the DB is never left empty. */
 export async function publishDailyEditionPhased(dateString?: string) {
   const date = dateString ?? getIstDateString();
+  const cumulative: RawNewsItem[] = [];
+  const allToInsert: RawNewsItem[] = [];
 
   for (const phase of CRON_PHASE_ORDER) {
-    await runCronPhase(phase, date);
+    const config = CRON_PHASE_CONFIG[phase];
+    const picked = await fetchAndSelectBatch(
+      cumulative,
+      config.language,
+      config.categories,
+    );
+    cumulative.push(...picked);
+    allToInsert.push(...picked);
   }
 
-  const edition = await getEditionForDate(date);
-  if (!edition) {
-    throw new Error("Phased publish failed to create edition");
+  if (allToInsert.length === 0) {
+    throw new Error("No articles fetched for today's edition");
   }
 
-  return edition;
+  return replaceDailyEdition(date, allToInsert);
 }

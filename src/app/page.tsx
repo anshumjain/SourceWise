@@ -81,8 +81,8 @@ export default async function Home({ searchParams }: HomeProps) {
         </h1>
         <p className="mt-4 text-stone-600 dark:text-stone-300">
           {language === "hi"
-            ? "फ़ीड हर सुबह 9:00 बजे IST पर स्वचालित रूप से प्रकाशित होती है। पहला संस्करण क्रॉन जॉब के बाद दिखेगा।"
-            : "The feed publishes automatically every morning at 9:00 AM IST via Vercel Cron. The first edition appears after that job runs."}
+            ? "फ़ीड हर सुबह 9:00 बजे IST पर स्वचालित रूप से प्रकाशित होती है। यदि क्रॉन अभी चल रहा है, कुछ मिनट बाद पुनः देखें।"
+            : "The feed publishes automatically every morning around 9:00 AM IST. If a cron job just ran, wait a few minutes and refresh — the edition builds in phases."}
         </p>
       </div>
     );
